@@ -1,0 +1,72 @@
+*.png
+*.jpg
+*.jpeg
+*.gif
+tmp/
+ssl/
+vendor/
+AYSORegion88GameCards/
+.ssh/
+.subversion/
+.trash/
+etc/
+logs/
+mail/
+# System and user-specific files
+.bash_history
+.bash_logout
+.bash_profile
+.bashrc
+.emacs
+.kshrc
+.lastlogin
+
+# Composer and dependency caches
+.composer/
+vendor/
+.wp-cli/
+
+# System-generated files and logs
+.cpanel/
+access-logs/
+error_log
+
+# SSH, Putty, and sensitive files
+.ssh/
+.putty/
+.dns
+
+# SpamAssassin and mail configurations
+.spamassassin/
+.spamassassinboxenable
+.spamassassinenable
+.spamboxenable
+
+# Temporary and cache files
+.softaculous/
+.htaccess.no_htaccess.phpupgrader
+
+# User-specific files
+.cphorde/
+.dns
+.emacs
+.gemrc
+.host-info
+.kshrc
+.lastlogin
+
+# SpamAssassin files
+.spamassassinboxenable
+.spamassassinenable
+.spamboxenable
+
+# Logs and temporary files
+.htaccess.no_htaccess.phpupgrader
+public_ftp/.ftpquota
+
+# Vendor files
+vendor/
+
+# Web server directories (optional, if not project-critical)
+www/
+
