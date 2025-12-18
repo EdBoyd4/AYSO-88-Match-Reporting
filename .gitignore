@@ -1,0 +1,9 @@
+# Runtime uploads / user data (never commit)
+AYSORegion88GameCards/
+public/AYSORegion88GameCards/
+
+# Secrets (never commit)
+**/smtp_config.php
+
+# Prevent stray nested git pointers
+public/.git
