@@ -11,10 +11,11 @@ $sessionId = session_id();
 
 $rootDir = realpath('/home/xnbglkce');
 include_once($rootDir . DIRECTORY_SEPARATOR . 'gss88SanctionReportDbInterface' . DIRECTORY_SEPARATOR . 'sanctionReportConnectionConstants.php');
-include_once($rootDir.DIRECTORY_SEPARATOR.'gss88SanctionReportDbInterface'.DIRECTORY_SEPARATOR.'matchInfoEntry.php');
-include_once($rootDir.DIRECTORY_SEPARATOR.'loginPageComponents'.DIRECTORY_SEPARATOR.'sanctionEntry.php');
-include_once($rootDir.DIRECTORY_SEPARATOR.'loginPageComponents'.DIRECTORY_SEPARATOR.'matchDetails.php');
-include_once($rootDir.DIRECTORY_SEPARATOR.'loginPageComponents'.DIRECTORY_SEPARATOR.'matchReportProcessing.php');
+// handles select to identify match
+include_once($rootDir.DIRECTORY_SEPARATOR.'gss88SanctionReportDbInterface'.DIRECTORY_SEPARATOR.'matchInfoEntry.php'); // handles inserts for report
+include_once($rootDir.DIRECTORY_SEPARATOR.'components-ref-match-report-page'.DIRECTORY_SEPARATOR.'section-sanction-entry.php');
+include_once($rootDir.DIRECTORY_SEPARATOR.'components-ref-match-report-page'.DIRECTORY_SEPARATOR.'section-match-details.php');
+include_once($rootDir.DIRECTORY_SEPARATOR.'components-ref-match-report-page'.DIRECTORY_SEPARATOR.'matchReportProcessing.php');
 include_once($rootDir.DIRECTORY_SEPARATOR.'gss88SanctionReportDbInterface'.DIRECTORY_SEPARATOR.'generateEmailReport.php');
 
 function matchReportFormHeaderView(){
@@ -27,17 +28,21 @@ function matchReportFormHeaderView(){
 }
 
 function matchReportFormView() {
-    echo'<!DOCTYPE html>
+    $gamePickerOptions = selectScheduledMatchOptionsFromDatabaseEXP();
+    ?><!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>AYSO Region 88 – Referee Match Report</title>
+            <script> const allMatches = <?= 
+                json_encode($gamePickerOptions, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+            ?></script>
             <script type="text/javascript" src="gameCardsPreview.js" defer></script>
             <script type="text/javascript" src="matchDetailVisibility.js" defer></script>
             <script type="text/javascript" src="sanctionEntryVisibility.js" defer></script>
             <script type="text/javascript" src="formManagement.js" defer></script>
-            <link rel="stylesheet" href="styles.css">
+            <link rel="stylesheet" href="styles-gss88-match-report-form.css">
         </head>
         <body>
             <div class="bg" aria-hidden="true"></div>
@@ -46,21 +51,30 @@ function matchReportFormView() {
                     id="form_ref_match_report"
                     name="gameResultsEntryForm"
                     method="post"
-                    action="'.$_SERVER['PHP_SELF'].'"
+                    action="<?= htmlspecialchars($_SERVER['PHP_SELF']); ?>"
                     enctype="multipart/form-data"
                     class="wrap card"
                     aria-labelledby="title"
-                >';
+                >
+    <?php
     matchReportFormHeaderView();
     matchDescriptorFieldSetView();
     matchReportFieldSetView();
     sanctionsReportsFieldSetView();
     matchNotesAndSubmitFieldset();
-    echo'</form>
-        <div id="loadingMessage">Uploading your report. Please wait for confirmation. Depending on the age of your phone, and the quality of your connection, this may take up to a minute.</div>
+    ?></form>
+        <div id="loadingMessage"
+            class="loading-message"
+            aria-live="polite"
+            hidden
+            >
+            Uploading your report. Please wait for confirmation. Depending on the age
+            of your phone, and the quality of your connection, this may take up to a minute.
+        </div>
         </main>
         </body>
-        </html>';
+        </html>
+    <?php
 };
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){

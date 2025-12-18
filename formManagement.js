@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
         registerFormSanctionElements(form);
         form.addEventListener('submit', function(event) {
             // Display the loading message
-            loadingMessage.style.display = 'flex';
+            loadingMessage.hidden = false;
             form.style.display = 'none';
         });
     } else {
