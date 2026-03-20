@@ -4,6 +4,8 @@ public/AYSORegion88GameCards/
 
 # Secrets (never commit)
 **/smtp_config.php
+**/constants-model-GSS-88-match-and-sanction-db.php
+**/deploy-local.sh
 
 # Prevent stray nested git pointers
 public/.git

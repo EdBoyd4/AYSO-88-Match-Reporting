@@ -1,6 +1,6 @@
 <?php
 
-include_once('constants-sanction-detail-menus.php');
+include_once GSS88_CONFIG_FILES . '/constants-sanction-detail-menus.php';
 
 function sanctionNumberReminder($containerId){
     echo '<p 
@@ -135,9 +135,8 @@ function sanctionSummary($containerId, $sanctionReasonText = null){
 
 function sanctionReportBasic($containerId, $sanctionLevel = null, $sanctionParty = null, $sanctionedPartyDescriptionText = null, $sanctionReasonText = null){
     // creates div
-    echo '<section id="section_sanction-entry-'.$containerId.'" 
-        class="section_sanction-entry"
-        hidden>';
+        $hiddenAttr = ($containerId === 1) ? '' : ' hidden';
+    echo '<section id="section_sanction-entry-'.$containerId.'" class="section_sanction-entry"'.$hiddenAttr.'>';
     echo '<button 
         type="button" 
         data-entry-type="sanction_report" 

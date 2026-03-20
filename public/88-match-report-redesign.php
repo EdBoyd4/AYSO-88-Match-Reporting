@@ -9,14 +9,14 @@ $currentDateFromSys = $dateTime->format('Y-m-d');
 $currentTimeFromSys = $dateTime->format('H:i');
 $sessionId = session_id();
 
-$rootDir = realpath('/home/xnbglkce');
-include_once($rootDir . DIRECTORY_SEPARATOR . 'gss88SanctionReportDbInterface' . DIRECTORY_SEPARATOR . 'sanctionReportConnectionConstants.php');
+include_once __DIR__ . '/../config-ref-match-reporting/constants-GSS-88-file-paths.php';
 // handles select to identify match
-include_once($rootDir.DIRECTORY_SEPARATOR.'gss88SanctionReportDbInterface'.DIRECTORY_SEPARATOR.'matchInfoEntry.php'); // handles inserts for report
-include_once($rootDir.DIRECTORY_SEPARATOR.'components-ref-match-report-page'.DIRECTORY_SEPARATOR.'section-sanction-entry.php');
-include_once($rootDir.DIRECTORY_SEPARATOR.'components-ref-match-report-page'.DIRECTORY_SEPARATOR.'section-match-details.php');
-include_once($rootDir.DIRECTORY_SEPARATOR.'components-ref-match-report-page'.DIRECTORY_SEPARATOR.'matchReportProcessing.php');
-include_once($rootDir.DIRECTORY_SEPARATOR.'gss88SanctionReportDbInterface'.DIRECTORY_SEPARATOR.'generateEmailReport.php');
+include_once GSS88_CONFIG_FILES . '/constants-model-GSS-88-match-and-sanction-db.php';
+include_once GSS88_MODELS_REPORTS . '/model-report-entry.php'; // handles inserts for report
+include_once GSS88_VIEWS_REPORTS . '/view-section-match-detail.php';
+include_once GSS88_VIEWS_REPORTS . '/view-section-sanction-entry.php';
+include_once GSS88_CONTROLLERS_UPLOAD . '/controller-match-report-sanitize-and-enter.php';
+include_once GSS88_CONTROLLERS_UPLOAD . '/controller-match-report-email.php';
 
 function matchReportFormHeaderView(){
     echo'<header class="form_ref_match-header">

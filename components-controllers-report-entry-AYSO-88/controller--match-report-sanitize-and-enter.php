@@ -1,5 +1,5 @@
 <?php
-include_once('gameCardsUpload.php');
+include_once('controller-match-report-photo-upload.php');
 
 function trimFieldValueForValidation ($fieldSubmitted){
 	$filteredString = str_replace("field", "", $fieldSubmitted);

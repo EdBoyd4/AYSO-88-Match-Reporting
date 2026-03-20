@@ -5,11 +5,15 @@
   --card: #ffffff;
   --ink: #2b2f33;
   --muted: #7b7f86;
-  --primary: #3b82f6;      /* available for buttons, etc. */
+
+  --primary: #2563eb;        /* deeper, more confident blue */
+  --primary-dark: #1e4ed8;
+  --primary-soft: #dbeafe;
+
   --ring: rgba(60,64,67,.2);
   --shadow: 0 10px 30px rgba(0,0,0,.06);
   --radius: 14px;
-  --field-max: 560px;      /* max form width on desktop */
+  --field-max: 560px;
   --gutter: 24px;
 }
 
@@ -185,7 +189,7 @@ textarea,
 select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--ring);
+  border: 2px solid var(--ring);
   border-radius: 8px;
   background: #fff;
   font-size: 16px;
@@ -219,13 +223,46 @@ select:focus {
   text-align: center;   /* center label text */
 }
 
-/* Center specific buttons inside their sections */
-.section-match-entry button,
-.section_photo-gamecards button,
+.section-match-entry > button,
+.section_photo-gamecards > button,
 .section_sanction-entry > button,
 .section_match-issue > button {
   display: block;
   margin: 0 auto;
+  appearance: none;
+
+  border: 2px solid var(--primary);   /* stronger border */
+  background: #fff;
+  color: var(--primary);
+
+  border-radius: 10px;
+  padding: 10px 14px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  width: 100%;
+  max-width: 520px;
+
+  transition:
+    background .12s ease,
+    color .12s ease,
+    transform .08s ease;
+}
+
+.section-match-entry > button:hover,
+.section_photo-gamecards > button:hover,
+.section_sanction-entry > button:hover,
+.section_match-issue > button:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.section-match-entry > button:active,
+.section_photo-gamecards > button:active,
+.section_sanction-entry > button:active,
+.section_match-issue > button:active {
+  transform: translateY(1px);
 }
 
 /* Center labels in the referee-details fieldset */
@@ -233,13 +270,6 @@ select:focus {
   text-align: center;
   width: 100%;
   display: block;
-}
-
-/* Center the submit block */
-#match-notes-and-submit-descriptor {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 /* Submit button */
@@ -315,4 +345,52 @@ select:focus {
 
 .loading-message[hidden] {
   display: none;
+}
+
+#submit.btn {
+  background: linear-gradient(
+    to bottom,
+    var(--primary),
+    var(--primary-dark)
+  );
+  color: #fff;
+  min-width: 260px;
+
+  border: 2px solid var(--primary-dark);
+
+  box-shadow: 
+    0 10px 22px rgba(0,0,0,.12),
+    0 2px 6px rgba(37,99,235,.35);
+
+  transition: 
+    transform .08s ease,
+    box-shadow .12s ease,
+    filter .12s ease;
+}
+
+#submit.btn:hover {
+  filter: brightness(1.05);
+  box-shadow: 
+    0 14px 28px rgba(0,0,0,.15),
+    0 4px 10px rgba(37,99,235,.45);
+}
+
+#submit.btn:active {
+  transform: translateY(1px);
+  box-shadow: 
+    0 6px 14px rgba(0,0,0,.15),
+    0 2px 4px rgba(37,99,235,.35);
+}
+
+/* Base button outline */
+button,
+.btn {
+  border: 1px solid var(--primary-soft);
+}
+
+/* Stronger blue outline only when focused */
+button:focus-visible,
+.btn:focus-visible {
+  outline: 3px solid rgba(37,99,235,.35);
+  outline-offset: 2px;
 }

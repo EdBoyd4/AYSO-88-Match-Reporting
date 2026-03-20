@@ -151,10 +151,10 @@ function matchDescriptorFieldSetView($matchDate = null, $matchTime = null, $fiel
     $gamePickerOptions = selectScheduledMatchOptionsFromDatabaseEXP();
     echo'<fieldset class="match-descriptor" id="match-descriptor">
         <legend class="match-descriptor__legend">Match Details</legend>';
-    fieldSelectorDisplay($gamePickerOptions, $fieldNumber);
-    divisionSelectorDisplay($gamePickerOptions, $teamDivisionNumber);
     matchDateSelectorDisplay($gamePickerOptions, $matchDate);
     matchTimeSelectorDisplay($gamePickerOptions, $matchTime);
+    fieldSelectorDisplay($gamePickerOptions, $fieldNumber);
+    divisionSelectorDisplay($gamePickerOptions, $teamDivisionNumber);
     // not sure what the hell this is for : echo '<input type="hidden" id="game-details-data" value=\'' . json_encode($gamePickerOptions) . '\' />
     echo '</fieldset>';
 }
@@ -283,9 +283,13 @@ function refStaffingIssueGPT2($staffingIssueNumber = null, $staffingIssue = null
     echo '</fieldset>';
 }
 
-function otherMatchIssueGPT2($matchIssueNumber = null, $matchIssue = null) {
+function matchNotesFieldset($matchIssueNumber = null, $matchIssue = null) {
     $matchIssueNumber = $matchIssueNumber ?? ''; // Handle null case
-    echo '<section id="section_match-issue-entry'.$matchIssueNumber.'" class="section-match-entry">';
+    echo '<fieldset class="match-notes-descriptor" id="match-notes-descriptor">
+            <legend class="match-notes-descriptor__legend">
+                Additional Notes
+            </legend>
+            <section id="section_match-issue-entry'.$matchIssueNumber.'" class="section-match-entry">';
         echo '<button 
                 type="button"
                 id="button_match-issue'.$matchIssueNumber.'"
@@ -304,7 +308,8 @@ function otherMatchIssueGPT2($matchIssueNumber = null, $matchIssue = null) {
                 cols="60">'
                 .($matchIssue === null ? '' : htmlspecialchars($matchIssue)).'</textarea>';
         echo '</section>';
-    echo '</section>';
+    echo '</section>
+    </fieldset>';
 }
 
 function matchReportFieldSetView($refName = null, $ar1Name = null, $ar2Name = null){
@@ -320,10 +325,20 @@ function matchReportFieldSetView($refName = null, $ar1Name = null, $ar2Name = nu
     echo '</fieldset>';
 }
 
-function matchNotesAndSubmitFieldset(){
-    echo'<fieldset class="match-notes-and-submit-descriptor" id="match-notes-and-submit-descriptor">
-        <legend class="match-notes-and-submit-descriptor__legend">Additional Notes and Report Submission</legend>';
-    otherMatchIssueGPT2();
-    echo'<input type="submit" value="Submit the Match Results" name="submit" id="submit" class="btn"/>
-        </fieldset>';
+function submitFieldset(){
+    echo '
+    <fieldset class="match-submit-descriptor" id="match-submit-descriptor">
+        <legend class="match-submit-descriptor__legend">
+            Report Submission
+        </legend>
+        <div class="submit-row">
+            <input
+                type="submit"
+                value="Submit the Match Results"
+                name="submit"
+                id="submit"
+                class="btn"
+            />
+        </div>
+    </fieldset>';
 }
