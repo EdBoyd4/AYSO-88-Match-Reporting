@@ -358,11 +358,11 @@ error_log('Initial peak memory usage: ' . memory_get_peak_usage() . ' bytes');
         //$mail->Username   = $smtpConfig['username'];
         $mail->Username   = 'sanctionReports@gss88.org';
         //$mail->Password   = $smtpConfig['password'];
-        $mail->Password   = 'erh3bew*BVK*yer7mpe';
+        $mail->Password   = 'thank god that was a bad password!';
         //$mail->SMTPSecure = $smtpConfig['secure'];
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
         //$mail->Port       = $smtpConfig['port'];
-        $mail->Port       = 465;
+        $mail->Port       = 465; 
 
             // Recipients
             $mail->setFrom('sanctionReports@gss88.org', 'Region 88 - AYSO - Match Report System - RAMaReS');
