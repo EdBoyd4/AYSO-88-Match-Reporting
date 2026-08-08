@@ -1,0 +1,1 @@
+/home/xnbglkce/gss88/collateral/js/display/display-gamecard-photo.js

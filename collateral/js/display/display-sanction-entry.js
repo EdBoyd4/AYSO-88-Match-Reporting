@@ -18,26 +18,33 @@ function registerSanctionSectionVisibility(buttonsSanctionEntry){
             const nextSection = document.querySelector(`#section_sanction-entry-${index + 2}`);
             const elementsInSection = content.querySelectorAll('input, textarea');
             
-            if (button.textContent === 'I Had to Caution / Send-Off Someone' || button.textContent === 'I Had to Caution / Send-Off Someone Else') {
+            const isExpanded = button.getAttribute('aria-expanded') === 'true';
+            
+            if (!isExpanded) {
                 // Toggle to clicked state
+                button.setAttribute('aria-expanded', 'true');
                 button.textContent = 'Disregard This Sanction Report';
                 content.style.display = 'flex';
+                content.hidden = false;
                 // disable the elements
                 elementsInSection.forEach(element => {
                     element.disabled = false;
                     element.required = true;
                 });
                 if (nextSection) {
-                    nextSection.style.display = 'flex';
+                    nextSection.style.display = 'block';
+                    nextSection.hidden = false;
                 }
             } else {
                 // Toggle to unclicked state
+                button.setAttribute('aria-expanded', 'false');
                 if(button.id === 'button_sanction-entry-1'){
                     button.textContent = 'I Had to Caution / Send-Off Someone';
                 }else{
                     button.textContent = 'I Had to Caution / Send-Off Someone Else';
                 }                
                 content.style.display = 'none';
+                content.hidden = true;
                 // disable the elements
                 elementsInSection.forEach(element => {
                     element.disabled = true;
@@ -68,15 +75,22 @@ function hideFollowingSections(startIndex) {
     let section = document.querySelector(`#section_sanction-entry-${i}`);
     while (section) {
         section.style.display = 'none';
+        section.hidden = true;
         const content = document.querySelector(`#section_sanction-info-${i}`);
-        content.style.display = 'none';
-        const elementsInSection = content.querySelectorAll('input, textarea');
-        // disable the elements
-        elementsInSection.forEach(element => {
-            element.disabled = true;
-        });
+        if (content) {
+            content.style.display = 'none';
+            content.hidden = true;
+            const elementsInSection = content.querySelectorAll('input, textarea');
+            // disable the elements
+            elementsInSection.forEach(element => {
+                element.disabled = true;
+            });
+        }
         const button = document.querySelector(`#button_sanction-entry-${i}`);
-        button.textContent = 'I Had to Caution / Send-Off Someone Else';
+        if (button) {
+            button.setAttribute('aria-expanded', 'false');
+            button.textContent = 'I Had to Caution / Send-Off Someone Else';
+        }
         i++;
         section = document.querySelector(`#section_sanction-entry-${i}`);
     }

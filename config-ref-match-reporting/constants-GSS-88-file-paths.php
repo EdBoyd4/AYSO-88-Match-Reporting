@@ -18,12 +18,63 @@ define('GSS88_CONTROLLERS-UPDATES', GSS88_ROOT . '/components-controllers-report
 // cronTest.php
 
 define('GSS88_MODELS_REPORTS', GSS88_ROOT . '/components-model-report-entry-AYSO-88');
-/* model-report-entry.php*/
+/* model-insert.php
+model-query.php */
 
 define('GSS88_VIEWS_REPORTS', GSS88_ROOT . '/components-view-report-entry-AYSO-88');
 /*
-view-section-match-detail.php
-view-section-sanction-entry.php 
+class-view-sanctions-reports-fieldset.php
+*/
+
+define('GSS88_VIEWS_REPORTS_FOCUSED', GSS88_VIEWS_REPORTS . '/focused');
+/*
+class-view-division-selector.php
+class-view-field-selector.php
+class-view-game-cards-photo-entry-segment.php
+class-view-match-date-selector.php
+class-view-match-notes-fieldset.php
+class-view-match-report-form-header.php
+class-view-match-time-selector.php
+class-view-ref-names.php
+class-view-ref-staffing-issue-gpt2.php
+class-view-submit-fieldset.php
+class-view-sanction-number-reminder.php
+*/
+
+define('GSS88_VIEWS_REPORTS_COMPOUND', GSS88_VIEWS_REPORTS . '/compound');
+/*
+class-view-match-descriptor-fieldset.php
+class-view-match-report-fieldset.php
+class-view-match-report-form.php
+*/
+
+define('GSS88_COLLATERAL_JS_DISPLAY', GSS88_ROOT . '/collateral/js/display');
+/* 
+display-gamecard-photo.js
+display-match-details.js
+display-sanction-entry.js 
+*/
+
+define('GSS88_COLLATERAL_STYLES', GSS88_ROOT . '/collateral/styles');
+/* 
+styles-gss88-match-report-form.css 
+*/
+
+define('GSS88_COLLATERAL_JS_CONTROLLERS', GSS88_ROOT . '/collateral/js/controllers');
+/*
+controller-gamecard-files.js
+controller-match-details.js
+controller-match-report-form.js
+*/
+
+define('GSS88_COLLATERAL_IMAGES', GSS88_ROOT . '/collateral/images');
+/* 
+5home.webp
+88_logo.png
+favicon.ico
+goal-grass.jpg
+image_example-1.jpg
+image_example-2.jpg
 */
 
 define('GSS88_ASSETS_REPORT_PHOTOS', GSS88_ROOT . '/assets-match-report-photos');

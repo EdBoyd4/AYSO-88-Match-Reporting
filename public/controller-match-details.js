@@ -1,0 +1,1 @@
+/home/xnbglkce/gss88/collateral/js/controllers/controller-match-details.js

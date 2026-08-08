@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+function initForm() {
   const form = document.getElementById('form_ref_match_report');
   const loadingMessage = document.getElementById('loadingMessage');
 
@@ -23,4 +23,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (loadingMessage) loadingMessage.hidden = false;
     form.style.display = 'none';
   });
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initForm);
+} else {
+  initForm();
+}

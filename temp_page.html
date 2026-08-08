@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AYSO Region 88 – Referee Match Report</title>
+    <script> const allMatches = []</script>
+    <script type="text/javascript" src="gameCardsPreview.js?v=1785992372" defer></script>
+    <script type="text/javascript" src="matchDetailVisibility.js?v=1785992372" defer></script>
+    <script type="text/javascript" src="sanctionEntryVisibility.js?v=1785992372" defer></script>
+    <script type="text/javascript" src="formManagement.js?v=1785992372" defer></script>
+    <link rel="stylesheet" href="styles-gss88-match-report-form.css">
+</head>
+<body>
+    <div class="bg" aria-hidden="true"></div>
+    <main>
+        <form
+            id="form_ref_match_report"
+            name="gameResultsEntryForm"
+            method="post"
+            action="/88-match-report-redesign.php"
+            enctype="multipart/form-data"
+            class="wrap card"
+            aria-labelledby="title"
+        >
+<header class="form_ref_match-header">
+                <img src="88_logo.png" alt="AYSO Region 88 Glendale logo" class="logo" />
+                <h1 id="title">AYSO Region 88<br>Fall Core</h1>
+                <h2>Referee Game Report</h2>
+                <p class="tagline">Brought to You By Glendale Soccer Scores (gss.org)</p>
+            </header><fieldset class="match-descriptor" id="match-descriptor">
+            <legend class="match-descriptor__legend">Match Details</legend><section class="match-descriptor__group match-descriptor__group--date">
+        <label for="match-date" class="match-descriptor__label">Date:</label>
+        <select id="match-date" name="match-date" class="form-control match-descriptor__input match-descriptor__input--date" required><option value="none" selected>Select a Date</option></select>
+    </section><section class="match-descriptor__group match-descriptor__group--time">
+        <label for="match-time" class="match-descriptor__label">Time:</label>
+        <select id="match-time" name="match-time" class="form-control match-descriptor__input match-descriptor__input--time" required><option value="none" selected>Select a Time</option></select>
+    </section ><section class="match-descriptor__group match-descriptor__group--field">
+        <label for="select-field" class="match-descriptor__label">Field:</label>
+        <select id="select-field" name="field-select" class="form-control match-descriptor__input match-descriptor__select" required><option value="none" selected>Select a field</option></select>
+    </section><section class="match-descriptor__group match-descriptor__group--division">
+        <label for="division-select" class="match-descriptor__label">Division:</label>
+        <select id="division-select" name="division-select" class="form-control match-descriptor__input match-descriptor__select" required><option value="none" selected>Select a Division</option></select>
+    </section><input type="hidden" id="game-details-data" value="[]" /></fieldset><fieldset class="match-report-descriptor" id="match-report-descriptor">
+            <legend class="match-report-descriptor__legend">Referee Details</legend><section id="section-center-ref-entry"
+                     class="match-report-descriptor__ref match-report-descriptor__ref--center">
+
+                <label for="text-ref-center"
+                       id="label-text-ref-center">
+                       Your Name:
+                </label>
+
+                <input type="text"
+                        name="center"
+                        id="text-ref-center"
+                        class="form-control"
+                         required>
+            </section><section id="section-ar1-ref-entry"
+                     class="match-report-descriptor__ref match-report-descriptor__ref--ar1">
+
+                <label for="text-ref-ar1"
+                       id="label-text-ref-ar1">
+                       AR 1's Name:
+                </label>
+
+                <input type="text"
+                        name="ar1"
+                        id="text-ref-ar1"
+                        class="form-control"
+                        >
+            </section><section id="section-ar2-ref-entry"
+                     class="match-report-descriptor__ref match-report-descriptor__ref--ar2">
+
+                <label for="text-ref-ar2"
+                       id="label-text-ref-ar2">
+                       AR 2's Name:
+                </label>
+
+                <input type="text"
+                        name="ar2"
+                        id="text-ref-ar2"
+                        class="form-control"
+                        >
+            </section><fieldset id="section_ref-staffing-issue" class="section-match-entry">
+                <legend>Referee Staffing Issue</legend><button 
+                type="button"
+                id="button_ref-staffing-issue"
+                class="button_ref-staffing-issue"
+                aria-controls="section_ref-staffing-issue-detail"
+                aria-expanded="false">
+                Report a Referee Staffing Issue
+            </button><section id="section_ref-staffing-issue-detail" class="section_match-issue" hidden><label for="textarea_ref-staffing-issue" 
+                id="label_ref-staffing-issue">Please Provide A Brief Description of the Issue(s):</label>
+                <textarea
+                    id="textarea_ref-staffing-issue" 
+                    name="refStaffingIssueText" 
+                    class="form-control" 
+                    rows="1" 
+                    cols="60">
+                </textarea></section></fieldset><section id="section_gamecard-pair-1-photo-entry" class="section_photo-gamecards">
+            <label for="photo_gamecard-pair-1" class="label_gamecards_photo">Photo of Front of Card 1, and Back of Card 2:
+            <input type="file" accept="image/*" capture="camera"
+                name="gameCardsPhoto1" 
+                id="photo_gamecard-pair-1" 
+                class="photo_gamecard-pair" required></label>
+                <button 
+                type="button" 
+                id="button_gamecard-photo-example-1" 
+                class="button-userhelper-example"
+                >
+                See Example
+                </button>
+                <!-- Modal -->
+                <div 
+                id="imageAlert1" 
+                class="modal"
+                >
+                    <div 
+                    class="modal-content"
+                    >
+                        <span id="closeExample1" class="close">&times;</span>
+                        <img src="/image_example-1.jpg" alt="Alert Image" />
+                    </div>
+                </div>
+        </section>
+        <section id="photo_gamecard-pair-1-preview"></section><section id="section_gamecard-pair-2-photo-entry" class="section_photo-gamecards">
+            <label for="photo_gamecard-pair-2" class="label_gamecards_photo">Photo of Front of Card 2, and Back of Card 1:
+            <input type="file" accept="image/*" capture="camera"
+                name="gameCardsPhoto2" 
+                id="photo_gamecard-pair-2" 
+                class="photo_gamecard-pair" required></label>
+                <button 
+                type="button" 
+                id="button_gamecard-photo-example-2" 
+                class="button-userhelper-example"
+                >
+                See Example
+                </button>
+                <!-- Modal -->
+                <div 
+                id="imageAlert2" 
+                class="modal"
+                >
+                    <div 
+                    class="modal-content"
+                    >
+                        <span id="closeExample2" class="close">&times;</span>
+                        <img src="/image_example-2.jpg" alt="Alert Image" />
+                    </div>
+                </div>
+        </section>
+        <section id="photo_gamecard-pair-2-preview"></section></fieldset><fieldset class="sanction-reports-descriptor" 
+        id="sanction-reports-descriptor">
+        <legend 
+        class="sanction-reports-descriptor__legend">
+        Sanctions Issued
+        </legend><section id="section_sanction-entry-1" class="section_sanction-entry"><button 
+            type="button" 
+            data-entry-type="sanction_report" 
+            id="button_sanction-entry-1" 
+            class="button_sanction-entry"
+            aria-controls="section_sanction-info-1"
+            aria-expanded="false">I Had to Caution / Send-Off Someone</button><section id="section_sanction-info-1" 
+                class="section_sanction-info-entry" 
+                style="display:none;"><p 
+        id="p_sanction-reminder-1" 
+        class="p_sanction-number-reminder">
+        You are entering Sanction # 1 of 5:
+        </p><section id="section_sanction-level-1" 
+            class="section_sanction-level">
+            <p 
+            id="p_sanction-level-detail-1" 
+            class="p_sanction-level-detail">
+            I Issued:
+            </p>
+            <section 
+            id="section_sanction-level-detail-1" 
+            class="section_sanctioned-level-detail">
+            <label><input 
+            type="radio" 
+            id="radio_button_sanction-yellow-1" 
+            name="sanctionLevel1" 
+            value="yellow" 
+            class="radio_button_sanction-level">A Caution</label>
+            <label><input 
+            type="radio" 
+            id="radio_button_sanction-red-1" 
+            name="sanctionLevel1" 
+            value="red" 
+            class="radio_button_sanction-level">A Send-Off</label></section>
+        </section><section id="section_sanctioned-party-1" 
+        class="section_sanctioned-party">
+        <p 
+        id="p_sanctioned-party-detail-1" 
+        class="p_sanctioned-party-detail">
+        I Cautioned / Sent-Off:
+        </p>
+        <section 
+        id="sanctioned-party-detail-1" 
+        class="section_sanctioned-party-detail">
+            <label><input 
+            type="radio" 
+            id="radio_button-sanction-party-player-1" 
+            name="sanctionParty1" 
+            value="player"  
+            class="radio_button_sanctioned-party">A Player</label>
+            <label><input 
+            type="radio" 
+            id="radio_button-sanction-party-coach-1" 
+            name="sanctionParty1" 
+            value="coach"  
+            class="radio_button_sanctioned-party">A Coach</label></section>
+        </section><section 
+        id="section_sanction-party-description-1" 
+        class="section_sanction-detail" 
+        style="display:none;"><label 
+        for="textarea_sanction-party-description-1" 
+        id="label_sanction-party-1" 
+        class="label_sanction-description">
+        </label>
+        <p 
+        id="p_sanction-party-1" 
+        class="p_sanction-description">
+        </p><textarea 
+        name="sanction-party-description-1" 
+        id="textarea_sanction-party-description-1" 
+        class="form-control textarea_sanction-party-description" 
+        rows = "1" 
+        cols = "60"></textarea></section><section 
+        id="section_sanction-summary-1" 
+        class="section_sanction-summary" 
+        style="display:none;">
+        <label 
+        for="textarea_sanction-summary-1"
+        class="sanctionEntry_labels">
+        Please Provide A Brief Description of What Happened:
+        </label>
+        <textarea 
+        name="sanction1SummaryText" 
+        id="textarea_sanction-summary-1" 
+        class="form-control form-control textarea_sanction-summary" 
+        rows = "1" 
+        cols = "60"></textarea>
+        </section></section></section><section id="section_sanction-entry-2" class="section_sanction-entry" hidden><button 
+            type="button" 
+            data-entry-type="sanction_report" 
+            id="button_sanction-entry-2" 
+            class="button_sanction-entry"
+            aria-controls="section_sanction-info-2"
+            aria-expanded="false">I Had to Caution / Send-Off Someone Else</button><section id="section_sanction-info-2" 
+                class="section_sanction-info-entry" 
+                style="display:none;"><p 
+        id="p_sanction-reminder-2" 
+        class="p_sanction-number-reminder">
+        You are entering Sanction # 2 of 5:
+        </p><section id="section_sanction-level-2" 
+            class="section_sanction-level">
+            <p 
+            id="p_sanction-level-detail-2" 
+            class="p_sanction-level-detail">
+            I Issued:
+            </p>
+            <section 
+            id="section_sanction-level-detail-2" 
+            class="section_sanctioned-level-detail">
+            <label><input 
+            type="radio" 
+            id="radio_button_sanction-yellow-2" 
+            name="sanctionLevel2" 
+            value="yellow" 
+            class="radio_button_sanction-level">A Caution</label>
+            <label><input 
+            type="radio" 
+            id="radio_button_sanction-red-2" 
+            name="sanctionLevel2" 
+            value="red" 
+            class="radio_button_sanction-level">A Send-Off</label></section>
+        </section><section id="section_sanctioned-party-2" 
+        class="section_sanctioned-party">
+        <p 
+        id="p_sanctioned-party-detail-2" 
+        class="p_sanctioned-party-detail">
+        I Cautioned / Sent-Off:
+        </p>
+        <section 
+        id="sanctioned-party-detail-2" 
+        class="section_sanctioned-party-detail">
+            <label><input 
+            type="radio" 
+            id="radio_button-sanction-party-player-2" 
+            name="sanctionParty2" 
+            value="player"  
+            class="radio_button_sanctioned-party">A Player</label>
+            <label><input 
+            type="radio" 
+            id="radio_button-sanction-party-coach-2" 
+            name="sanctionParty2" 
+            value="coach"  
+            class="radio_button_sanctioned-party">A Coach</label></section>
+        </section><section 
+        id="section_sanction-party-description-2" 
+        class="section_sanction-detail" 
+        style="display:none;"><label 
+        for="textarea_sanction-party-description-2" 
+        id="label_sanction-party-2" 
+        class="label_sanction-description">
+        </label>
+        <p 
+        id="p_sanction-party-2" 
+        class="p_sanction-description">
+        </p><textarea 
+        name="sanction-party-description-2" 
+        id="textarea_sanction-party-description-2" 
+        class="form-control textarea_sanction-party-description" 
+        rows = "1" 
+        cols = "60"></textarea></section><section 
+        id="section_sanction-summary-2" 
+        class="section_sanction-summary" 
+        style="display:none;">
+        <label 
+        for="textarea_sanction-summary-2"
+        class="sanctionEntry_labels">
+        Please Provide A Brief Description of What Happened:
+        </label>
+        <textarea 
+        name="sanction2SummaryText" 
+        id="textarea_sanction-summary-2" 
+        class="form-control form-control textarea_sanction-summary" 
+        rows = "1" 
+        cols = "60"></textarea>
+        </section></section></section><section id="section_sanction-entry-3" class="section_sanction-entry" hidden><button 
+            type="button" 
+            data-entry-type="sanction_report" 
+            id="button_sanction-entry-3" 
+            class="button_sanction-entry"
+            aria-controls="section_sanction-info-3"
+            aria-expanded="false">I Had to Caution / Send-Off Someone Else</button><section id="section_sanction-info-3" 
+                class="section_sanction-info-entry" 
+                style="display:none;"><p 
+        id="p_sanction-reminder-3" 
+        class="p_sanction-number-reminder">
+        You are entering Sanction # 3 of 5:
+        </p><section id="section_sanction-level-3" 
+            class="section_sanction-level">
+            <p 
+            id="p_sanction-level-detail-3" 
+            class="p_sanction-level-detail">
+            I Issued:
+            </p>
+            <section 
+            id="section_sanction-level-detail-3" 
+            class="section_sanctioned-level-detail">
+            <label><input 
+            type="radio" 
+            id="radio_button_sanction-yellow-3" 
+            name="sanctionLevel3" 
+            value="yellow" 
+            class="radio_button_sanction-level">A Caution</label>
+            <label><input 
+            type="radio" 
+            id="radio_button_sanction-red-3" 
+            name="sanctionLevel3" 
+            value="red" 
+            class="radio_button_sanction-level">A Send-Off</label></section>
+        </section><section id="section_sanctioned-party-3" 
+        class="section_sanctioned-party">
+        <p 
+        id="p_sanctioned-party-detail-3" 
+        class="p_sanctioned-party-detail">
+        I Cautioned / Sent-Off:
+        </p>
+        <section 
+        id="sanctioned-party-detail-3" 
+        class="section_sanctioned-party-detail">
+            <label><input 
+            type="radio" 
+            id="radio_button-sanction-party-player-3" 
+            name="sanctionParty3" 
+            value="player"  
+            class="radio_button_sanctioned-party">A Player</label>
+            <label><input 
+            type="radio" 
+            id="radio_button-sanction-party-coach-3" 
+            name="sanctionParty3" 
+            value="coach"  
+            class="radio_button_sanctioned-party">A Coach</label></section>
+        </section><section 
+        id="section_sanction-party-description-3" 
+        class="section_sanction-detail" 
+        style="display:none;"><label 
+        for="textarea_sanction-party-description-3" 
+        id="label_sanction-party-3" 
+        class="label_sanction-description">
+        </label>
+        <p 
+        id="p_sanction-party-3" 
+        class="p_sanction-description">
+        </p><textarea 
+        name="sanction-party-description-3" 
+        id="textarea_sanction-party-description-3" 
+        class="form-control textarea_sanction-party-description" 
+        rows = "1" 
+        cols = "60"></textarea></section><section 
+        id="section_sanction-summary-3" 
+        class="section_sanction-summary" 
+        style="display:none;">
+        <label 
+        for="textarea_sanction-summary-3"
+        class="sanctionEntry_labels">
+        Please Provide A Brief Description of What Happened:
+        </label>
+        <textarea 
+        name="sanction3SummaryText" 
+        id="textarea_sanction-summary-3" 
+        class="form-control form-control textarea_sanction-summary" 
+        rows = "1" 
+        cols = "60"></textarea>
+        </section></section></section><section id="section_sanction-entry-4" class="section_sanction-entry" hidden><button 
+            type="button" 
+            data-entry-type="sanction_report" 
+            id="button_sanction-entry-4" 
+            class="button_sanction-entry"
+            aria-controls="section_sanction-info-4"
+            aria-expanded="false">I Had to Caution / Send-Off Someone Else</button><section id="section_sanction-info-4" 
+                class="section_sanction-info-entry" 
+                style="display:none;"><p 
+        id="p_sanction-reminder-4" 
+        class="p_sanction-number-reminder">
+        You are entering Sanction # 4 of 5:
+        </p><section id="section_sanction-level-4" 
+            class="section_sanction-level">
+            <p 
+            id="p_sanction-level-detail-4" 
+            class="p_sanction-level-detail">
+            I Issued:
+            </p>
+            <section 
+            id="section_sanction-level-detail-4" 
+            class="section_sanctioned-level-detail">
+            <label><input 
+            type="radio" 
+            id="radio_button_sanction-yellow-4" 
+            name="sanctionLevel4" 
+            value="yellow" 
+            class="radio_button_sanction-level">A Caution</label>
+            <label><input 
+            type="radio" 
+            id="radio_button_sanction-red-4" 
+            name="sanctionLevel4" 
+            value="red" 
+            class="radio_button_sanction-level">A Send-Off</label></section>
+        </section><section id="section_sanctioned-party-4" 
+        class="section_sanctioned-party">
+        <p 
+        id="p_sanctioned-party-detail-4" 
+        class="p_sanctioned-party-detail">
+        I Cautioned / Sent-Off:
+        </p>
+        <section 
+        id="sanctioned-party-detail-4" 
+        class="section_sanctioned-party-detail">
+            <label><input 
+            type="radio" 
+            id="radio_button-sanction-party-player-4" 
+            name="sanctionParty4" 
+            value="player"  
+            class="radio_button_sanctioned-party">A Player</label>
+            <label><input 
+            type="radio" 
+            id="radio_button-sanction-party-coach-4" 
+            name="sanctionParty4" 
+            value="coach"  
+            class="radio_button_sanctioned-party">A Coach</label></section>
+        </section><section 
+        id="section_sanction-party-description-4" 
+        class="section_sanction-detail" 
+        style="display:none;"><label 
+        for="textarea_sanction-party-description-4" 
+        id="label_sanction-party-4" 
+        class="label_sanction-description">
+        </label>
+        <p 
+        id="p_sanction-party-4" 
+        class="p_sanction-description">
+        </p><textarea 
+        name="sanction-party-description-4" 
+        id="textarea_sanction-party-description-4" 
+        class="form-control textarea_sanction-party-description" 
+        rows = "1" 
+        cols = "60"></textarea></section><section 
+        id="section_sanction-summary-4" 
+        class="section_sanction-summary" 
+        style="display:none;">
+        <label 
+        for="textarea_sanction-summary-4"
+        class="sanctionEntry_labels">
+        Please Provide A Brief Description of What Happened:
+        </label>
+        <textarea 
+        name="sanction4SummaryText" 
+        id="textarea_sanction-summary-4" 
+        class="form-control form-control textarea_sanction-summary" 
+        rows = "1" 
+        cols = "60"></textarea>
+        </section></section></section><section id="section_sanction-entry-5" class="section_sanction-entry" hidden><button 
+            type="button" 
+            data-entry-type="sanction_report" 
+            id="button_sanction-entry-5" 
+            class="button_sanction-entry"
+            aria-controls="section_sanction-info-5"
+            aria-expanded="false">I Had to Caution / Send-Off Someone Else</button><section id="section_sanction-info-5" 
+                class="section_sanction-info-entry" 
+                style="display:none;"><p 
+        id="p_sanction-reminder-5" 
+        class="p_sanction-number-reminder">
+        You are entering Sanction # 5 of 5:
+        </p><section id="section_sanction-level-5" 
+            class="section_sanction-level">
+            <p 
+            id="p_sanction-level-detail-5" 
+            class="p_sanction-level-detail">
+            I Issued:
+            </p>
+            <section 
+            id="section_sanction-level-detail-5" 
+            class="section_sanctioned-level-detail">
+            <label><input 
+            type="radio" 
+            id="radio_button_sanction-yellow-5" 
+            name="sanctionLevel5" 
+            value="yellow" 
+            class="radio_button_sanction-level">A Caution</label>
+            <label><input 
+            type="radio" 
+            id="radio_button_sanction-red-5" 
+            name="sanctionLevel5" 
+            value="red" 
+            class="radio_button_sanction-level">A Send-Off</label></section>
+        </section><section id="section_sanctioned-party-5" 
+        class="section_sanctioned-party">
+        <p 
+        id="p_sanctioned-party-detail-5" 
+        class="p_sanctioned-party-detail">
+        I Cautioned / Sent-Off:
+        </p>
+        <section 
+        id="sanctioned-party-detail-5" 
+        class="section_sanctioned-party-detail">
+            <label><input 
+            type="radio" 
+            id="radio_button-sanction-party-player-5" 
+            name="sanctionParty5" 
+            value="player"  
+            class="radio_button_sanctioned-party">A Player</label>
+            <label><input 
+            type="radio" 
+            id="radio_button-sanction-party-coach-5" 
+            name="sanctionParty5" 
+            value="coach"  
+            class="radio_button_sanctioned-party">A Coach</label></section>
+        </section><section 
+        id="section_sanction-party-description-5" 
+        class="section_sanction-detail" 
+        style="display:none;"><label 
+        for="textarea_sanction-party-description-5" 
+        id="label_sanction-party-5" 
+        class="label_sanction-description">
+        </label>
+        <p 
+        id="p_sanction-party-5" 
+        class="p_sanction-description">
+        </p><textarea 
+        name="sanction-party-description-5" 
+        id="textarea_sanction-party-description-5" 
+        class="form-control textarea_sanction-party-description" 
+        rows = "1" 
+        cols = "60"></textarea></section><section 
+        id="section_sanction-summary-5" 
+        class="section_sanction-summary" 
+        style="display:none;">
+        <label 
+        for="textarea_sanction-summary-5"
+        class="sanctionEntry_labels">
+        Please Provide A Brief Description of What Happened:
+        </label>
+        <textarea 
+        name="sanction5SummaryText" 
+        id="textarea_sanction-summary-5" 
+        class="form-control form-control textarea_sanction-summary" 
+        rows = "1" 
+        cols = "60"></textarea>
+        </section></section></section><section id="section_sanction-entry-6" class="section_sanction-entry" hidden><button 
+            type="button" 
+            data-entry-type="sanction_report" 
+            id="button_sanction-entry-6" 
+            class="button_sanction-entry"
+            aria-controls="section_sanction-info-6"
+            aria-expanded="false">I Had to Caution / Send-Off Someone Else</button><section id="section_sanction-info-6" 
+                class="section_sanction-info-entry" 
+                style="display:none;"><p 
+                id="section_sanction-severe" 
+                class="p_sanction-severe">
+                Please Contact the Regional Referee Administrator and your Division Coordinator ASAP! 
+                This match must be directly and thoroughly reported.
+                </p></section></section></fieldset><fieldset class="match-notes-descriptor" id="match-notes-descriptor">
+            <legend class="match-notes-descriptor__legend">
+                Additional Notes
+            </legend>
+            <section id="section_match-issue-entry" class="section-match-entry"><button 
+                type="button"
+                id="button_match-issue"
+                class="button_match-issue"
+                aria-controls="section_match-issue-detail"
+                aria-expanded="false">
+                Please Check Here If There was an Issue with Something Else (Spectator(s), Field, Etc.)
+            </button><section id="section_match-issue-detail" class="section_match-issue" hidden><label for="textarea_match-issue" 
+                id="label_match-issue">Please Provide A Brief Description of the Issue(s):</label>
+                <textarea id="textarea_match-issue" 
+                name="matchIssueText" 
+                class="form-control" 
+                rows="1" 
+                cols="60"></textarea></section></section>
+    </fieldset>
+        <fieldset class="match-submit-descriptor" id="match-submit-descriptor">
+            <legend class="match-submit-descriptor__legend">
+                Report Submission
+            </legend>
+            <div class="submit-row">
+                <input
+                    type="submit"
+                    value="Submit the Match Results"
+                    name="submit"
+                    id="submit"
+                    class="btn"
+                />
+            </div>
+        </fieldset>        </form>
+        <div id="loadingMessage"
+            class="loading-message"
+            aria-live="polite"
+            hidden
+        >
+            Uploading your report. Please wait for confirmation. Depending on the age
+            of your device, and the quality of your connection, this may take up to a minute.
+        </div>
+    </main>
+</body>
+</html>
