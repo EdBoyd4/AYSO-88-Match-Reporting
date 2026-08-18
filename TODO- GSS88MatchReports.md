@@ -2,12 +2,8 @@
 
 ## 🔧 In Progress
 - [ ] refactor display-match-details.js and controller-match-details.js
-- [ ] refactor display-sanction-entry.js so that it works properly
-- [ ] write view-section-match-result-detail.php - home team score entry, away team score entry
-- [ ] write controller-section-match-result-detail.php
-- [ ] refactor photo naming conventions for clarity (e.g., `<match_id>-photo-<number>.jpg`)
+- [ ] fieldAndAgeMatchCheckAndSet() in controller-match-report-sanitize-and-enter.php - not called yet, kept in place for future use
 - [ ] choose / crop pictures for background 
-- [ ] Not sure if you need the title "Fall Core" this will make you change at every season or tournament the title. - drop or add year
 - [ ] 
 
 ## 📌 Next Tasks
@@ -29,6 +25,8 @@
 
 ## 🧪 Testing Checklist
 - [ ] new SELECT query for match selection
+- [ ] flip GSS88_EMAIL_DEV_MODE (in public/login.php, formerly public/88-match-report-redesign.php) to false before going live - it currently suppresses every notification-email recipient except edwin.b@ayso88.org
+- [ ] www-data can't write to AYSORegion88GameCards (mkdir/move_uploaded_file both fail with Permission denied) - game card photos aren't actually landing on disk yet even though the DB row + filename get saved
 - [ ] 
 
 ## 🗂 Notes

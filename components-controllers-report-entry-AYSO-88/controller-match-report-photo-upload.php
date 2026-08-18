@@ -55,7 +55,16 @@ function gameCardImageIntegrityAndFileSizeCheck($gameCardsPhotoNameExpected){
     } */
 }
 
-function gameCardFoldersConstructor($imageDate, $imageDivision, $imageField, $imageTime){
+// Strips anything unsafe for a folder/file name (division and field names
+// can contain spaces, "#", etc.) and collapses whitespace to underscores,
+// e.g. "Glendale Sports Complex #2" -> "Glendale_Sports_Complex_2".
+function sanitizeForFilesystem($name){
+    $name = preg_replace('/\s+/', '_', trim((string)$name));
+    $name = preg_replace('/[^A-Za-z0-9_\-]/', '', $name);
+    return $name;
+}
+
+function gameCardFoldersConstructor($imageDate, $imageDivisionName, $imageFieldName, $imageTime){
     // get folders for saving gameCard images
     // gets folder above htdocs, or whatever
     $rootDir = realpath($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'..');
@@ -63,8 +72,8 @@ function gameCardFoldersConstructor($imageDate, $imageDivision, $imageField, $im
     $gameCardsDir = $rootDir.DIRECTORY_SEPARATOR.'AYSORegion88GameCards';
     error_log('gameCardsDir: ' . $gameCardsDir);
 
-    // Build the full directory path in one go
-    $fullDirPath = $gameCardsDir.DIRECTORY_SEPARATOR.$imageDate.DIRECTORY_SEPARATOR.$imageField.DIRECTORY_SEPARATOR.$imageDivision.DIRECTORY_SEPARATOR.$imageTime;
+    // Build the full directory path in one go: <date>/<division>/<field>/<time>
+    $fullDirPath = $gameCardsDir.DIRECTORY_SEPARATOR.$imageDate.DIRECTORY_SEPARATOR.$imageDivisionName.DIRECTORY_SEPARATOR.$imageFieldName.DIRECTORY_SEPARATOR.$imageTime;
     //error_log('gimme a damn map to '.$fullDirPath);
 
     // Create the full directory path if it does not exist
@@ -74,19 +83,24 @@ function gameCardFoldersConstructor($imageDate, $imageDivision, $imageField, $im
         The third number specifies permissions for the owner's user group
         The fourth number specifies permissions for everybody else
         Possible values (to set multiple permissions, add up the following numbers):
-    
+
         1 = execute permissions
         2 = write permissions
         4 = read permissions */
-        mkdir($fullDirPath, 0710, true); // true allows recursive creation
+        // 0710 (no read/execute for anyone but the web server) meant nobody
+        // logged in as themselves - not as www-data - could even list these
+        // folders to find the photos. Only the web server needs to write
+        // here, so read+list for everyone else is safe.
+        mkdir($fullDirPath, 0755, true); // true allows recursive creation
     }
     //error_log('Nested directories are checked and created if needed.');
     return $fullDirPath;
 }
 
-function gameCardPhotoReName($imageDate, $imageDivision, $imageField, $imageTime, $fileExtension, $imageNumber){
-    // construct file name with extension
-    $gameCardPhotoSystemName = 'Card_Photo_'.$imageNumber.'_'.$imageDate.'_'.$imageDivision.'_'.$imageField.'_'.$imageTime. '.'.$fileExtension;
+function gameCardPhotoReName($imageDate, $imageDivisionName, $imageFieldName, $imageTime, $fileExtension, $imageNumber){
+    // construct file name with extension - same <date>/<division>/<field>/<time>
+    // ordering as the folder path
+    $gameCardPhotoSystemName = 'Card_Photo_'.$imageNumber.'_'.$imageDate.'_'.$imageDivisionName.'_'.$imageFieldName.'_'.$imageTime. '.'.$fileExtension;
     //error_log($gameCardPhotoSystemName);
 	return $gameCardPhotoSystemName;
 }
@@ -158,22 +172,24 @@ function processGameCardPhotoUpload(&$headerDataItems, $gameCardsPhotoNameExpect
 
             $imageDate = $headerDataItems['matchDate'];
             // error_log('Match Date: ' . $formattedDate);
-            $imageDivision = $headerDataItems['teamDivision'];
-            $imageField = $headerDataItems['playingfield'];
+            // Folder/file names use the actual division & field names, not
+            // their internal _id-adjacent numbers, so look those up.
+            $imageDivisionName = sanitizeForFilesystem(getDivisionNameByDivisionNumber($headerDataItems['teamDivision']));
+            $imageFieldName = sanitizeForFilesystem(getFieldNameByFieldNumber($headerDataItems['playingfield']));
             $imageTime = $headerDataItems['matchStartTime'];
             // Replace colons with hyphens or other safe characters for use in folder and file names
             $safeImageTime = str_replace(':', '-', $imageTime);
             //error_log('the bloody time is - '.$imageTime);
-            $gameCardsSystemLocation = gameCardFoldersConstructor($imageDate, $imageDivision, $imageField, $safeImageTime);
+            $gameCardsSystemLocation = gameCardFoldersConstructor($imageDate, $imageDivisionName, $imageFieldName, $safeImageTime);
             error_log('storage location: ' . $gameCardsSystemLocation);
             /* $imageOriginalFilename = basename($_FILES[$gameCardsPhotoNameExpected]['name']);
             error_log('nightmare - '.$imageOriginalFilename); */
-            
+
             /* $digits = filter_var($gameCardsPhotoNameExpected, FILTER_SANITIZE_NUMBER_INT);
             $imageNumber = substr($digits, -1); */
             $headerDataItems['image_number'.$gameCardsPhotoNumber] = $gameCardsPhotoNumber;
             // get the permanent name of the image file for inclusion in the DB
-            $gameCardPhotoSystemName = gameCardPhotoReName($imageDate, $imageDivision, $imageField, $safeImageTime, $fileExtension, $gameCardsPhotoNumber);
+            $gameCardPhotoSystemName = gameCardPhotoReName($imageDate, $imageDivisionName, $imageFieldName, $safeImageTime, $fileExtension, $gameCardsPhotoNumber);
             error_log('FileName: ' . $gameCardPhotoSystemName);
             // save the image in a non-public directory under a safe and searchable name 
             gameCardFileSave($gameCardsPhotoNameExpected, $gameCardsSystemLocation, $gameCardPhotoSystemName);

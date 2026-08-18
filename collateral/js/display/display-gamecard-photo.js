@@ -4,13 +4,29 @@ async function displayPhoto() {
     // Check if any file is selected
     if (this.files && this.files[0]) {
         const file = this.files[0];
+
+        // A selection can come through empty (an interrupted picker, a
+        // 0-byte file, etc.) - catch that here instead of letting it reach
+        // the server, which currently hard-fails the whole page on an
+        // unrecognizable file rather than showing a friendly message.
+        if (file.size === 0) {
+            console.warn('Selected game card photo "' + file.name + '" is empty (0 bytes); clearing it.');
+            this.value = '';
+            const existingImg = photoHolder.querySelector('img');
+            if (existingImg && existingImg.src.startsWith('blob:')) {
+                URL.revokeObjectURL(existingImg.src);
+            }
+            photoHolder.innerHTML = '<p class="photo-error">That file appears to be empty. Please choose a different photo.</p>';
+            return;
+        }
+
         const dimensions = { width: '700px', height: '500px' };
         const maxSize = 2 * 1024 * 1024; // 2MB
 
         try {
             const resizedImage = await scaleCardPhoto(file, dimensions, maxSize);
 
-            if (resizedImage !== null) {
+            if (resizedImage !== null && resizedImage.size > 0) {
                 // Swap the raw file with the compressed file in the actual input!
                 const dataTransfer = new DataTransfer();
                 // Ensure proper filename extension for a JPEG
@@ -26,8 +42,9 @@ async function displayPhoto() {
 
                 const img = document.createElement('img');
                 img.src = URL.createObjectURL(resizedImage);
-                img.style.maxWidth = '700px'; // Set maximum width
-                img.style.maxHeight = '500px'; // Set maximum height
+                // Sizing lives in CSS (.section_photo-gamecards-preview img)
+                // so it can cap width to the actual container instead of a
+                // fixed pixel value that can overflow it.
                 img.alt = 'Game card preview';
 
                 // Clear previous preview, if any
@@ -35,7 +52,10 @@ async function displayPhoto() {
                 // Append the image to the preview div
                 photoHolder.appendChild(img);
             } else {
-                console.log('Failed to resize image.');
+                // Resizing failed (or produced nothing usable) - fall back
+                // to whatever was originally selected rather than silently
+                // swapping in something empty; this.files is left as-is.
+                console.log('Failed to resize image; keeping the original file.');
             }
         } catch (error) {
             console.error('Error resizing image:', error);

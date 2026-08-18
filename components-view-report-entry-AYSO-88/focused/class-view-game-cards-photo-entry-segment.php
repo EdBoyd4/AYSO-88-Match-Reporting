@@ -51,6 +51,6 @@ class GameCardsPhotoEntrySegment {
                     </div>
                 </div>
         </section>
-        <section id="photo_' . $matchPrefix . 'gamecard-pair-' . $this->pairNumber . '-preview"></section>';
+        <section id="photo_' . $matchPrefix . 'gamecard-pair-' . $this->pairNumber . '-preview" class="section_photo-gamecards-preview"></section>';
     }
 }

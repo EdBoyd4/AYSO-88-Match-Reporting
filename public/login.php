@@ -9,185 +9,62 @@ $currentDateFromSys = $dateTime->format('Y-m-d');
 $currentTimeFromSys = $dateTime->format('H:i');
 $sessionId = session_id();
 
-$rootDir = realpath('/home/xnbglkce');
-include_once($rootDir . DIRECTORY_SEPARATOR . 'gss88SanctionReportDbInterface' . DIRECTORY_SEPARATOR . 'sanctionReportConnectionConstants.php');
-include_once($rootDir.DIRECTORY_SEPARATOR.'gss88SanctionReportDbInterface'.DIRECTORY_SEPARATOR.'matchInfoEntry.php');
-include_once($rootDir.DIRECTORY_SEPARATOR.'loginPageComponents'.DIRECTORY_SEPARATOR.'sanctionEntry.php');
-include_once($rootDir.DIRECTORY_SEPARATOR.'loginPageComponents'.DIRECTORY_SEPARATOR.'matchDetails.php');
-include_once($rootDir.DIRECTORY_SEPARATOR.'loginPageComponents'.DIRECTORY_SEPARATOR.'matchReportProcessing.php');
-include_once($rootDir.DIRECTORY_SEPARATOR.'gss88SanctionReportDbInterface'.DIRECTORY_SEPARATOR.'generateEmailReport.php');
+include_once __DIR__ . '/../config-ref-match-reporting/constants-GSS-88-file-paths.php';
+// handles select to identify match
+include_once GSS88_CONFIG_FILES . '/constants-model-GSS-88-match-and-sanction-db.php';
+include_once GSS88_MODELS_REPORTS . '/model-insert.php'; // handles inserts for report
+include_once GSS88_MODELS_REPORTS . '/model-query.php'; // handles queries for report
+include_once GSS88_VIEWS_REPORTS_COMPOUND . '/class-view-match-report-form.php';
+include_once GSS88_CONTROLLERS_UPLOAD . '/controller-match-report-sanitize-and-enter.php';
 
-function gameResultsInsertComplete() {
-    echo'<!DOCTYPE html>
-        <head>
-            <script type="text/javascript" src="gameCardsPreview.js" defer></script>
-            <script type="text/javascript" src="matchDetailVisibility.js" defer></script>
-            <script type="text/javascript" src="sanctionEntryVisibility.js" defer></script>
-            <script type="text/javascript" src="formManagement.js" defer></script>
-            <style>
-            body {
-                background-repeat: no-repeat;
-                background-attachment: fixed; 
-                background-size: 50% 100%;
-                background-position: center top;
-                background-color: rgba(255,255,255,0.85);
-                background-blend-mode: lighten;
-                background-image: url(\'88_logo.png\'); 
-            }
-            img{
-                display: block;
-                margin-left: auto;
-                margin-right: auto;
-            }
-            .topper1{
-                float: left;
-                width: 25%;
-                margin: auto;
-            }
-            .topper2{
-                width: 50%;
-                text-align: center;
-                margin: auto;
-            }
-            .topper3{
-                float: right;
-                width: 25%;
-                margin: auto;
-                text-align: right;
-            }
-            .buttonHolder{
-                text-align: center;
-            }
-            h1, h2, h3, h4{
-                text-align: center;
-            }
-            .section_sanction-entry, .section_sanction-summary, .section_sanction-info-entry, .button_sanction-entry, .section-match-entry, .section_ref_entry, .section_photo-gamecards, .p_sanction-level-detail, .submitButtonHolder, .section_sanction-detail{
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-            .section_sanctioned-level-detail, .section_sanctioned-party-detail{
-            display: flex;
-                flex-direction: row;
-                align-items: center;
-            }
-            .sanction_level_divs{
-            flex-direction: row;
-            }
+// controller-match-report-email.php expects $rootDir (for its
+// vendor/autoload.php require) to already be set by whatever includes it -
+// same convention controller-match-report-photo-upload.php uses.
+$rootDir = realpath($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '..');
 
-            /* The Modal (background) */
-            .modal {
-                display: none; /* Hidden by default */
-                position: fixed; 
-                z-index: 1; 
-                left: 0;
-                top: 0;
-                width: 100%; 
-                height: 100%; 
-                overflow: auto; 
-                background-color: rgb(0,0,0); 
-                background-color: rgba(0,0,0,0.4); 
-            }
+// TEMPORARY while testing locally, between seasons: this sends real mail
+// (real staff addresses, real SMTP creds, both hardcoded in the file below)
+// as soon as it's included, so every recipient except the referee
+// administrator is suppressed until this is flipped back to false for
+// production. See TODO- GSS88MatchReports.md.
+define('GSS88_EMAIL_DEV_MODE', true);
+include_once GSS88_CONTROLLERS_UPDATES . '/controller-match-report-email.php';
 
-            /* Modal Content */
-            .modal-content {
-                background-color: #fefefe;
-                margin: 15% auto; 
-                padding: 20px;
-                border: 1px solid #888;
-                width: 80%; 
-                max-width: 500px;
-            }
 
-            /* The Close Button */
-            .close {
-                color: #aaa;
-                float: right;
-                font-size: 28px;
-                font-weight: bold;
-            }
-
-            .close:hover,
-            .close:focus {
-                color: black;
-                text-decoration: none;
-                cursor: pointer;
-            }
-
-            /* Image styling */
-            .modal-content img {
-                width: 100%;
-                height: auto;
-            }
-            
-            #loadingMessage {
-            display: none;
-            font-size: 18px;
-            }
-
-            </style>';
-        echo'</head>';
-        echo'<body>';
-            echo'<div class="LogOn">
-                    <div class="topper1">
-                        <button data-nav-type="login">Log In</button>
-                    </div>
-                    <div class="topper3">
-                        <button data-nav-type="return">Return to Match Entry</button>
-                    </div>
-                    <div class="topper2">
-                        <h1>AYSO Region 88 Game Result Entry System</h1>
-                    </div>
-                </div>';
-        
-            echo'<form id="form_game-results-entry" name ="gameResultsEntryForm" method="post" action="'.$_SERVER['PHP_SELF'].'" enctype="multipart/form-data">';
-            echo'<h4>Brought to You By Glendale Soccer Scores (gss.org)</h4>
-                <h1>Referee Game Report</h1>';
-            echo'<fieldset>';
-                setUpDateAndTimeSelectors();
-                refNames(0);
-                refNames(1);
-                refNames(2);
-                refStaffingIssueGPT2();
-                gameCardsPhotoEntrySegment(1);
-                gameCardsPhotoEntrySegment(2);
-                sanctionReportBasic(1);
-                sanctionReportBasic(2);
-                sanctionReportBasic(3);
-                sanctionReportBasic(4);
-                sanctionReportBasic(5);
-                sanctionReportBasic(6);
-                otherMatchIssueGPT2();
-                echo'</fieldset> </br>
-                <div class="submitButtonHolder">
-                    <input type="submit" value="Submit the Match Results" name="submit" id="submit"/>
-                </div>
-            </form>
-            <div id="loadingMessage">Uploading your report. Please wait for confirmation. Depending on the age of your phone, and the quality of your connection, this may take up to a minute.</div>
-        </body>
-    </html>';
-};
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
     error_log("POST received: Session ID: " . $sessionId. " date: ".$currentDateFromSys." time: ".$currentTimeFromSys);
 
     $headerDataItems = getHeaderDataFromPOST();
-    
+
     error_log("Header Processed: Session ID: " . $sessionId. " date: ".$currentDateFromSys." time: ".$currentTimeFromSys);
-    
+
+    // getHeaderDataFromPOST() returns null when a required field was
+    // missing/invalid; the specific problem was already echoed to the
+    // user, so just stop here instead of inserting incomplete data.
+    if ($headerDataItems === null) {
+        error_log("Validation failed: Session ID: " . $sessionId. " date: ".$currentDateFromSys." time: ".$currentTimeFromSys);
+        die();
+    }
+
     // method below returns matchIdPlayed
     $matchReportId = insertMatchData($headerDataItems);
-    
+
     error_log("data uploaded: Session ID: " . $sessionId. " date: ".$currentDateFromSys." time: ".$currentTimeFromSys);
-    
-    getMatchInfoForEvaluation($matchReportId);
-    
-    error_log("email sent: Session ID: " . $sessionId. " date: ".$currentDateFromSys." time: ".$currentTimeFromSys);
-    
+
+    // The report is already saved at this point - don't let a problem
+    // sending the notification email (this code path has never actually
+    // run end-to-end before) turn a successful submission into a 500.
+    try {
+        getMatchInfoForEvaluation($matchReportId);
+    } catch (\Throwable $e) {
+        error_log('Notification email failed for match report ' . $matchReportId . ': ' . $e->getMessage());
+    }
+
         session_destroy();
         header('Location: logout.php');
         die();
 }else{
     error_log("GET received: Session ID: " . $sessionId. " date: ".$currentDateFromSys." time: ".$currentTimeFromSys);
-    gameResultsInsertComplete();
+    (new MatchReportForm($_SERVER['PHP_SELF']))->render();
 }

@@ -50,11 +50,15 @@ function selectDivisionNamesAndNumbersForUserInterface(){
 }
 
 function getFieldNameByFieldNumber($fieldNumber){
-    return queryRecords('fields', 'field_number', $fieldNumber, 'field_name');
+    $rows = queryRecords('fields', 'field_number', $fieldNumber, 'field_name');
+    return $rows[0]['field_name'] ?? null;
 }
 
 function getDivisionNameByDivisionNumber($divisionNumber){
-    return queryRecords('divisions', 'division_number', $divisionNumber, 'division_name');    
+    // NOTE: previously queried a `divisions` table, which doesn't exist in
+    // this schema - the division data lives in `divisions_with_coordinators`.
+    $rows = queryRecords('divisions_with_coordinators', 'division_number', $divisionNumber, 'division_name');
+    return $rows[0]['division_name'] ?? null;
 }
 
 function selectScheduledMatchOptionsFromDatabaseEXP(){
@@ -66,9 +70,11 @@ function selectScheduledMatchOptionsFromDatabaseEXP(){
     $currentTimeFromSys = $dateTime->format('H:i');
 
     try {
-        $sql = "SELECT 
+        $sql = "SELECT
+            f._id AS field_row_id,
             f.field_number,
             f.field_name,
+            d._id AS division_row_id,
             d.division_number,
             d.division_name,
             sm.match_date,
@@ -177,7 +183,7 @@ function getMatchIdForReporting($matchDate, $matchTime, $field, $division){
     }
 }
 
-function queryRecords2($tableName, $idColumn, $idValue, $columnsToReturnString, $additionalParameters) {
+function queryRecords2($tableName, $idColumn, $idValue, $columnsToReturnString, $additionalParameters, $groupBy = null) {
     // Build the base query
     $statementForQuery = "SELECT " . $columnsToReturnString . " FROM " . $tableName . " ";
 
@@ -188,7 +194,13 @@ function queryRecords2($tableName, $idColumn, $idValue, $columnsToReturnString, 
     }
     if ($idColumn && $idValue) {
         $statementForQuery .= "WHERE " . $idColumn . " = ?";
-    } 
+    }
+    // Required whenever $columnsToReturnString mixes aggregates (the
+    // MAX(CASE...) sanction columns) with plain columns - MySQL's default
+    // ONLY_FULL_GROUP_BY mode rejects that combination without one.
+    if ($groupBy) {
+        $statementForQuery .= " GROUP BY " . $groupBy;
+    }
 
     global $dBConnection;
     $stmt = $dBConnection->prepare($statementForQuery);
@@ -268,7 +280,11 @@ function getMatchDetailsForEmail2($matchId){
     LEFT JOIN `gamecards` AS g2 ON sm._id = g2.match_id AND g2.image_number = 2
     LEFT JOIN `sanctions` AS s1 ON sm._id = s1.match_id ';
 
-    return queryRecords2('scheduled_matches AS sm', 'mr._id', $matchId, $columnsToReturnString, $additionalParameters);
+    // Group by each joined table's own key, not just sm._id - MySQL's
+    // ONLY_FULL_GROUP_BY mode requires the *joined* tables' non-aggregated
+    // columns (o.referee_1, f.field_number, dvc.division_name, ...) to be
+    // functionally dependent on something in the GROUP BY too.
+    return queryRecords2('scheduled_matches AS sm', 'mr._id', $matchId, $columnsToReturnString, $additionalParameters, 'sm._id, f._id, dvc._id, mr._id, o._id, g1._id, g2._id');
 }
 
 function getMatchDetailsForEmail($matchIdPlayed) {

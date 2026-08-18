@@ -13,7 +13,10 @@ define('GSS88_CONTROLLERS_UPLOAD', GSS88_ROOT . '/components-controllers-report-
 /* controller-match-report-photo-upload.php
 controller-match-report-sanitize-and-enter.php */
 
-define('GSS88_CONTROLLERS-UPDATES', GSS88_ROOT . '/components-controllers-reporting-updates-AYSO-88');
+// NOTE: was 'GSS88_CONTROLLERS-UPDATES' (hyphen) - a hyphen in a bareword
+// constant name reads as subtraction wherever it's referenced, so this was
+// never actually usable and nothing could reference it correctly.
+define('GSS88_CONTROLLERS_UPDATES', GSS88_ROOT . '/components-controllers-reporting-updates-AYSO-88');
 // controller-match-report-email.php
 // cronTest.php
 

@@ -9,8 +9,13 @@ class MatchDateSelector {
         $this->selectedDate = $selectedDate;
     }
 
+    // Dedupes and orders ascending. match_date comes back from MySQL as a
+    // zero-padded YYYY-MM-DD string, so a plain ascending sort is also
+    // chronological order.
     private function extractUniqueDates(array $gamePickerOptions): array {
-        return array_unique(array_column($gamePickerOptions, 'match_date'));
+        $uniqueDates = array_values(array_unique(array_column($gamePickerOptions, 'match_date')));
+        sort($uniqueDates);
+        return $uniqueDates;
     }
 
     public function render(): void {

@@ -9,18 +9,24 @@ class DivisionSelector {
         $this->selectedDivisionNumber = $selectedDivisionNumber;
     }
 
+    // Dedupes by division_number, then orders the same way the
+    // `divisions_with_coordinators` table itself lists rows (by _id)
+    // rather than by first-appearance in the (date-sorted) query.
     private function extractUniqueDivisions(array $gamePickerOptions): array {
         $uniqueDivisions = [];
         foreach ($gamePickerOptions as $division) {
-            $key = $division['division_number'] . '|' . $division['division_name'];
+            $key = $division['division_number'];
             if (!isset($uniqueDivisions[$key])) {
                 $uniqueDivisions[$key] = [
                     'division_number' => $division['division_number'],
-                    'division_name' => $division['division_name']
+                    'division_name' => $division['division_name'],
+                    'division_row_id' => $division['division_row_id']
                 ];
             }
         }
-        return array_values($uniqueDivisions);
+        $uniqueDivisions = array_values($uniqueDivisions);
+        usort($uniqueDivisions, fn($a, $b) => $a['division_row_id'] <=> $b['division_row_id']);
+        return $uniqueDivisions;
     }
 
     public function render(): void {

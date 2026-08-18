@@ -9,18 +9,24 @@ class FieldSelector {
         $this->selectedFieldNumber = $selectedFieldNumber;
     }
 
+    // Dedupes by field_number, then orders the same way the `fields` table
+    // itself lists rows (by _id) rather than by first-appearance in the
+    // (date-sorted) scheduled_matches query.
     private function extractUniqueFields(array $gamePickerOptions): array {
         $uniqueFields = [];
         foreach ($gamePickerOptions as $field) {
-            $key = $field['field_number'] . '|' . $field['field_name'];
+            $key = $field['field_number'];
             if (!isset($uniqueFields[$key])) {
                 $uniqueFields[$key] = [
                     'field_number' => $field['field_number'],
-                    'field_name' => $field['field_name']
+                    'field_name' => $field['field_name'],
+                    'field_row_id' => $field['field_row_id']
                 ];
             }
         }
-        return array_values($uniqueFields);
+        $uniqueFields = array_values($uniqueFields);
+        usort($uniqueFields, fn($a, $b) => $a['field_row_id'] <=> $b['field_row_id']);
+        return $uniqueFields;
     }
 
     public function render(): void {

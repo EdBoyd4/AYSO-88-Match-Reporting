@@ -206,6 +206,37 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(147, 197, 253, .35);
 }
 
+/* REQUIRED FIELDS: black border while still empty/incomplete, blue once
+   filled in and valid. Elements pick up `required` dynamically (e.g. an
+   opened sanction report, a staffing-issue note), so this tracks live -
+   nothing shows the black border until it's actually required. */
+input:required:invalid,
+select:required:invalid,
+textarea:required:invalid {
+  border-color: #000;
+}
+
+input:required:valid,
+select:required:valid,
+textarea:required:valid {
+  border-color: var(--primary);
+}
+
+/* Sanction radio groups aren't individually bordered by the browser the
+   way text/select/file inputs are, so border the group container itself
+   once its radios become required (i.e. once that sanction is "entered"). */
+.section_sanctioned-level-detail:has(input:required),
+.section_sanctioned-party-detail:has(input:required) {
+  border: 2px solid #000;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.section_sanctioned-level-detail:has(input:required:checked),
+.section_sanctioned-party-detail:has(input:required:checked) {
+  border-color: var(--primary);
+}
+
 /* Generic section spacing */
 .section_ref_entry,
 .section-match-entry,
@@ -215,12 +246,60 @@ select:focus {
   margin-top: 8px;
 }
 
+/* MATCH SCORE: home/away side by side and centered — scores are always
+   small integers, so the inputs stay narrow and only wrap to a stacked
+   layout if the available width gets too tight to hold both comfortably. */
+.match-score-descriptor__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 32px;
+}
+
+.match-score-descriptor__group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 0 1 120px;
+  min-width: 100px;
+}
+
+.match-score-descriptor__input {
+  width: 80px;
+  max-width: 80px;
+  text-align: center;
+}
+
 /* Center ONLY the photo-card sections (label + button) */
 .section_photo-gamecards {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;   /* center label text */
+}
+
+/* The preview image/error message is a separate sibling section (JS fills
+   it in after a photo is chosen) - it needs the same centering, plus a
+   hard cap so a photo can never render wider than its actual container
+   regardless of the fixed pixel max-width/max-height the JS sets inline. */
+.section_photo-gamecards-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.section_photo-gamecards-preview img {
+  max-width: 100%;
+  max-height: 500px;
+  height: auto;
+}
+
+.photo-error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+  margin: 4px 0 0;
 }
 
 .section-match-entry > button,
@@ -393,9 +472,27 @@ select:focus {
 
 #submit.btn:active {
   transform: translateY(1px);
-  box-shadow: 
+  box-shadow:
     0 6px 14px rgba(0,0,0,.15),
     0 2px 4px rgba(37,99,235,.35);
+}
+
+/* Not all required fields are filled in yet — flatten to a light
+   blue/grey so the button doesn't read as ready-to-press. */
+#submit.btn:disabled {
+  background: var(--primary-soft);
+  color: var(--muted);
+  border-color: var(--primary-soft);
+  box-shadow: none;
+  filter: none;
+  cursor: not-allowed;
+}
+
+#submit.btn:disabled:hover,
+#submit.btn:disabled:active {
+  filter: none;
+  box-shadow: none;
+  transform: none;
 }
 
 /* Base button outline */

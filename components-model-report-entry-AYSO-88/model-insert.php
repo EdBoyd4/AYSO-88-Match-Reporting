@@ -49,13 +49,13 @@ function prepareInsertData($data, $columnTypes) {
 }
 
 // matches
-function insertMatchPlayed($matchId, $refStaffingIssue = null, $matchIssue = null) {
+function insertMatchPlayed($matchId, $refStaffingIssue = null, $matchIssue = null, $homeScore = null, $awayScore = null) {
     $table = 'match_reports';
-    
+
     $data = [
         'match_id' => $matchId,
     ];
-    
+
     // Define the expected types for each column
     $columnTypes = [
         'match_id' => 'i',
@@ -69,6 +69,16 @@ function insertMatchPlayed($matchId, $refStaffingIssue = null, $matchIssue = nul
     if(!($matchIssue === null)){
         $data['match_issue'] = $matchIssue;
         $columnTypes['match_issue'] = 's';
+    }
+
+    if(!($homeScore === null)){
+        $data['home_score'] = $homeScore;
+        $columnTypes['home_score'] = 'i';
+    }
+
+    if(!($awayScore === null)){
+        $data['away_score'] = $awayScore;
+        $columnTypes['away_score'] = 'i';
     }
     
     // Filter out null values from both data and columnTypes
@@ -215,11 +225,13 @@ function insertMatchData($headerDataItems) {
         $startTime = $headerDataItems['matchTime']; */
         $refStaffingIssue = $headerDataItems['refStaffingIssueText'] ?? null;
         $matchIssue = $headerDataItems['matchIssueText'] ?? null;
-        
+        $homeScore = $headerDataItems['homeScore'] ?? null;
+        $awayScore = $headerDataItems['awayScore'] ?? null;
+
         //$matchIdScheduled = getMatchIdForReporting($datePlayed, $startTime, $ageLevel, $pitch);
 
         // Insert the match
-        $matchIdPlayed = insertMatchPlayed($headerDataItems['scheduled_match_id'], $refStaffingIssue, $matchIssue);
+        $matchIdPlayed = insertMatchPlayed($headerDataItems['scheduled_match_id'], $refStaffingIssue, $matchIssue, $homeScore, $awayScore);
         
         // Extract officiants data
         $referee_1 = $headerDataItems['Ref1'];

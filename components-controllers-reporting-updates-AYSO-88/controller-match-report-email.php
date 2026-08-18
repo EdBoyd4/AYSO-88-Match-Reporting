@@ -286,11 +286,14 @@ function generateGameCardLink($dataForEmail) {
     $rootDir = realpath($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '..');
     $gameCardsDir = $rootDir . DIRECTORY_SEPARATOR . 'AYSORegion88GameCards';
     
-    // Construct the full directory path
+    // Construct the full directory path - matches how
+    // controller-match-report-photo-upload.php actually saves these:
+    // <date>/<division name>/<field name>/<time>, names sanitized the
+    // same way (sanitizeForFilesystem() comes from that file).
     $fullDirPath = $gameCardsDir . DIRECTORY_SEPARATOR .
                    $dataForEmail['match_date'] . DIRECTORY_SEPARATOR .
-                   $dataForEmail['field_number'] . DIRECTORY_SEPARATOR .
-                   $dataForEmail['division_number'] . DIRECTORY_SEPARATOR .
+                   sanitizeForFilesystem($dataForEmail['division_name']) . DIRECTORY_SEPARATOR .
+                   sanitizeForFilesystem($dataForEmail['field_name']) . DIRECTORY_SEPARATOR .
                    $dataForEmail['file_time'];
     
     // Check if the full directory path exists
@@ -368,24 +371,24 @@ error_log('Initial peak memory usage: ' . memory_get_peak_usage() . ' bytes');
             $mail->setFrom('sanctionReports@gss88.org', 'Region 88 - AYSO - Match Report System - RAMaReS');
             // set up recipient list
             // each type of issue is sent to the relevant people
-            // for testing
-            // $mail->addAddress('tefboyd@gmail.com');
-            $mail->addAddress('edwin.b@ayso88.org');
+            $mail->addAddress('edwin.b@ayso88.org'); // referee administrator
+            if (!GSS88_EMAIL_DEV_MODE) {
             // RRA gets all the emails - every game
             $mail->addAddress('craig.d@ayso88.org');
-            $mail->addAddress($dataForEmail['dc_email']);
+            $mail->addAddress($dataForEmail['dc_email']); // division coordinator
             // sanctions are also sent to player behavior tracker
             if($dataForEmail['sanction_level_1']){
-                $mail->addAddress('scottnord@me.com'); 
+                $mail->addAddress('scottnord@me.com');
                 //$mail->addAddress('cvpa@ayso88.org'); // and match issues
             }
             // match issues are also sent to Field / Equipment Manager
             if($dataForEmail['match_issue']){
-                $mail->addAddress('scottnord@me.com'); 
+                $mail->addAddress('scottnord@me.com');
                 $mail->addAddress('fields@ayso88.org');
             }
+            }
             //$mail->addAddress();
-            
+
             // Content
             $mail->isHTML(true);
             /* $numberOfSanctions = sanctionAmountChecker($dataForEmail);
@@ -422,9 +425,10 @@ error_log('Peak memory usage before sending email: ' . memory_get_peak_usage() .
             error_log('Memory usage after sending email: ' . memory_get_usage() . ' bytes');
 error_log('Peak memory usage after sending email: ' . memory_get_peak_usage() . ' bytes');
             
-        // good for dev, not for production    
+        // good for dev, not for production
         //    echo 'Message has been sent';
         } catch (Exception $e) {
+            error_log('Notification email failed to send: ' . $mail->ErrorInfo);
         //    echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
         }
     }
