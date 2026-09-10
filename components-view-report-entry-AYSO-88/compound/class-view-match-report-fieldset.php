@@ -17,6 +17,9 @@ class MatchReportFieldSet {
 
     public function render(): void {
         // placeholder for version that includes Vartan/ Aldo page $gamePickerOptions = selectScheduledMatchOptionsFromDatabase();
+        echo '<p class="rapp-inline-link" style="margin:0 0 8px;font-size:.85em;text-align:center;">
+            <a href="/rapp/index.php" style="color:#0b5f3b;">Report abuse toward a referee (RAPP)&nbsp;&rsaquo;</a>
+        </p>';
         echo'<fieldset class="match-report-descriptor" id="match-report-descriptor">
             <legend class="match-report-descriptor__legend">Referee Details</legend>';
         (new RefNames(0, $this->refName))->render();
