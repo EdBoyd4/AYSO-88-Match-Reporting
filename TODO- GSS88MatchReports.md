@@ -18,6 +18,7 @@
 - [ ] update division_number column
 - [ ] refactor sanction description inputs 
 - [ ] refactor the css file to make it more succinct
+- [ ] move SMTP credentials out of controller-match-report-email.php (currently hard-coded; smtp_config.php is already stubbed for this) so the RAPP notifier and any future mailer read from one shared config instead of duplicating creds
 - [ ] 
 
 ## 🧭 Future Enhancements

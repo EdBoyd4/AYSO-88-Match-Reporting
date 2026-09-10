@@ -6,6 +6,11 @@ public/AYSORegion88GameCards/
 **/smtp_config.php
 **/constants-model-GSS-88-match-and-sanction-db.php
 **/deploy-local.sh
+.env
+
+# RAPP audio (sensitive; purged after retention window) - never commit
+RAPPReports/
+public/RAPPReports/
 
 # Prevent stray nested git pointers
 public/.git

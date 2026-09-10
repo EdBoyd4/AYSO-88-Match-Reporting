@@ -59,6 +59,19 @@ class MatchReportForm {
             Uploading your report. Please wait for confirmation. Depending on the age
             of your device, and the quality of your connection, this may take up to a minute.
         </div>
+
+        <aside class="wrap card rapp-callout" style="margin-top:16px;text-align:center;">
+            <p style="margin:0 0 10px;">
+                Were you or another official treated abusively during a match?
+            </p>
+            <a href="/rapp/index.php"
+               style="display:inline-block;padding:11px 20px;border-radius:8px;background:#0b5f3b;color:#fff;text-decoration:none;font-weight:600;">
+                File a Referee Abuse (RAPP) report
+            </a>
+            <p style="margin:10px 0 0;font-size:.9em;color:#4a5764;">
+                Separate from this game report. You'll sign in with a one-time code sent to your email.
+            </p>
+        </aside>
     </main>
 </body>
 </html>
