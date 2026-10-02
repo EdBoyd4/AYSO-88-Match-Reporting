@@ -1,5 +1,29 @@
 # Project TODO
 
+## ✅ Completed
+- [X] Match-data models reorganized -- 2026-09-24. components-model-report-
+      entry-AYSO-88/model-insert.php and model-query.php renamed to
+      model-match-data-insert.php and model-match-data-query.php.
+      matchReporting/model/MatchDataQueries.php (all match-data reads) moved
+      into model-match-data-query.php -- one class, unchanged, just relocated.
+      model-insert.php's procedural mysqli functions (global $dBConnection,
+      bind_param type strings) converted to a new PDO/OO class,
+      MatchDataInserter, in model-match-data-insert.php -- same tables, same
+      columns, same "omit a null field" behavior, same transaction/rollback
+      shape. model-query.php's one remaining function, getMatchDetailsForEmail2()
+      (fed the notification email only), ported to
+      MatchDataQueries::matchDetailsForEmail() -- identical SQL, identical
+      flat/unpivoted return shape, so controller-match-report-email.php's
+      consumption of it is unchanged (just calls it via `global $matchDataQueries`
+      now instead of a free function). GSS88_MATCH_REPORTING_MODEL constant
+      removed (nothing points at matchReporting/ anymore); GSS88_MODELS_REPORTS
+      now hosts all four match-data + RAPP-report model files. Live-verified:
+      match-report.php loads and its full insertMatchData() path (match
+      report + officiants + gamecards + 2 sanctions, transactional) round-
+      tripped correctly against the real schema, including a deliberate
+      failure case confirming the transaction rolls back completely rather
+      than leaving partial rows.
+
 ## 🔧 In Progress
 - [ ] refactor display-match-details.js and controller-match-details.js
 - [ ] fieldAndAgeMatchCheckAndSet() in controller-match-report-sanitize-and-enter.php - not called yet, kept in place for future use
