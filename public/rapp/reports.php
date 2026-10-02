@@ -1,20 +1,22 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../rapp/config/rapp-bootstrap.php';
-require_once __DIR__ . '/../../rapp/src/rapp-layout.php';
+require_once __DIR__ . '/../../controllers/rapp-bootstrap.php';
+require_once __DIR__ . '/../../views/rapp-layout.php';
 
 $basePath = $rappConfig['base_path'];
 
 // Any of these capabilities gets you onto the dashboard; each section re-checks.
-$ctx = rapp_context($pdo, $authManager, $sessionManager);
+$ctx = rapp_context($userAccessPdo, $authManager, $sessionManager);
 if ($ctx === null) {
-    header('Location: ' . $basePath . '/login.php?redirect=' . rawurlencode($_SERVER['REQUEST_URI'] ?? ($basePath . '/reports.php')));
+    // Root-absolute: admin-login.php lives at /admin-login.php, not under
+    // $basePath (moved 2026-10-02, see rapp-bootstrap.php/rapp-guard.php).
+    header('Location: /admin-login.php?redirect=' . rawurlencode($_SERVER['REQUEST_URI'] ?? ($basePath . '/reports.php')));
     exit;
 }
 if (!$ctx['is_active']) {
     $authManager->logout($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
-    header('Location: ' . $basePath . '/login.php?deactivated=1');
+    header('Location: /admin-login.php?deactivated=1');
     exit;
 }
 
@@ -27,7 +29,8 @@ $mdScope = $accessPolicy->scopeFor($roles, 'matchdata.view');
 $scScope = $accessPolicy->scopeFor($roles, 'scores.view');
 
 if (!$canRappView && !$canMatchData && !$canScores) {
-    header('Location: ' . $basePath . '/index.php?denied=1');
+    // Not the RAPP hub (removed) -- the general two-choice landing page.
+    header('Location: /login.php?denied=1');
     exit;
 }
 
@@ -48,13 +51,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $reportId > 0) {
     }
     $action = $_POST['action'] ?? '';
     if ($action === 'retain') {
-        $rappReports->setRetain($reportId, true);
+        $rappReportInserter->setRetain($reportId, true);
     } elseif ($action === 'release') {
-        $rappReports->setRetain($reportId, false);
+        $rappReportInserter->setRetain($reportId, false);
     } elseif ($action === 'close') {
-        $rappReports->setStatus($reportId, 'closed');
+        $rappReportInserter->setStatus($reportId, 'closed');
     } elseif ($action === 'acknowledge') {
-        $rappReports->setStatus($reportId, 'acknowledged');
+        $rappReportInserter->setStatus($reportId, 'acknowledged');
     }
     $auditRepository->logEvent('rapp_report_' . $action, $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0', $ctx['email'], 'report #' . $reportId);
     header('Location: reports.php?id=' . $reportId);
@@ -67,20 +70,20 @@ rapp_layout_head('RAPP dashboard', $ctx['name'], $basePath);
 // RAPP report detail
 // ===========================================================================
 if ($reportId > 0 && $canRappView) {
-    $r = $rappReports->findReport($reportId);
+    $r = $rappReportQueries->findReport($reportId);
     if ($r === null) {
         echo '<div class="card"><p class="msg error">Report not found.</p>'
            . '<a class="btn secondary" href="reports.php">Back</a></div>';
         rapp_layout_foot();
         return;
     }
-    $media = $rappReports->mediaForReport($reportId);
+    $media = $rappReportQueries->mediaForReport($reportId);
     $csrf = $sessionManager->generateCsrfToken();
     ?>
     <div class="card">
         <p class="muted"><a href="reports.php">&larr; All RAPP reports</a></p>
         <h1>RAPP report #<?= (int) $r['_id'] ?>
-            <span class="muted" style="font-weight:normal">— <?= rapp_esc(ucfirst($r['status'])) ?><?= (int) $r['retain'] === 1 ? ', preserved' : '' ?></span>
+            <span class="muted">— <?= rapp_esc(ucfirst($r['status'])) ?><?= (int) $r['retain'] === 1 ? ', preserved' : '' ?></span>
         </h1>
         <table class="rapp">
             <tr><th>Filed</th><td><?= rapp_esc($r['created_at']) ?></td></tr>
@@ -89,16 +92,16 @@ if ($reportId > 0 && $canRappView) {
             <tr><th>Teams</th><td><?= rapp_esc(($r['home_team'] ?? '?') . ' v ' . ($r['away_team'] ?? '?')) ?></td></tr>
         </table>
 
-        <h2 style="margin-top:16px">Written account</h2>
+        <h2 class="mt-16">Written account</h2>
         <?php if ($r['content_purged_at'] !== null): ?>
             <p class="muted">Purged <?= rapp_esc($r['content_purged_at']) ?> (retention window elapsed).</p>
         <?php elseif (($r['body_text'] ?? '') === ''): ?>
             <p class="muted">None provided.</p>
         <?php else: ?>
-            <p style="white-space:pre-wrap"><?= rapp_esc($r['body_text']) ?></p>
+            <p class="report-text"><?= rapp_esc($r['body_text']) ?></p>
         <?php endif; ?>
 
-        <h2 style="margin-top:16px">Voice recording</h2>
+        <h2 class="mt-16">Voice recording</h2>
         <?php if ($media === []): ?>
             <p class="muted">None provided.</p>
         <?php else: foreach ($media as $m): ?>
@@ -111,7 +114,7 @@ if ($reportId > 0 && $canRappView) {
         <?php endforeach; endif; ?>
 
         <?php if ($canRappRetain && $r['content_purged_at'] === null): ?>
-            <form method="post" action="reports.php?id=<?= (int) $r['_id'] ?>" style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap">
+            <form method="post" action="reports.php?id=<?= (int) $r['_id'] ?>" class="actions-row">
                 <input type="hidden" name="csrf_token" value="<?= rapp_esc($csrf) ?>">
                 <?php if ((int) $r['retain'] === 1): ?>
                     <button class="btn secondary" name="action" value="release" type="submit">Release (allow purge)</button>
@@ -162,7 +165,7 @@ if ($section === 'matchdata' && $canMatchData) {
                     <tr><th>Other issue</th><td><?= rapp_esc($row['match_issue'] ?? '') ?: '—' ?></td></tr>
                 </table>
                 <?php $sanctions = $rappMatchData->sanctionsForMatch($matchId); ?>
-                <h2 style="margin-top:16px">Sanctions (<?= count($sanctions) ?>)</h2>
+                <h2 class="mt-16">Sanctions (<?= count($sanctions) ?>)</h2>
                 <?php foreach ($sanctions as $s): ?>
                     <p><strong>#<?= (int) $s['sanction_number_in_match'] ?> <?= rapp_esc($sanctionLevel($s['sanction_level'])) ?></strong>
                         — <?= rapp_esc($sanctionParty($s['sanctioned_party'])) ?>: <?= rapp_esc($s['party_description']) ?><br>
@@ -184,12 +187,12 @@ if ($section === 'matchdata' && $canMatchData) {
         <?php if ($mdScope === 'division'): ?>
             <p class="muted">Your division only.</p>
         <?php else: ?>
-            <form method="get" action="reports.php" style="margin-bottom:12px">
+            <form method="get" action="reports.php" class="filter-form">
                 <input type="hidden" name="section" value="matchdata">
                 <label for="division">Division</label>
                 <select name="division" id="division" onchange="this.form.submit()">
                     <option value="">All divisions</option>
-                    <?php foreach ($rappMatchData->divisions() as $d): ?>
+                    <?php foreach ($rappMatchData->activeDivisions() as $d): ?>
                         <option value="<?= (int) $d['id'] ?>" <?= $divisionId === $d['id'] ? 'selected' : '' ?>><?= rapp_esc($d['name']) ?></option>
                     <?php endforeach; ?>
                 </select>
@@ -228,12 +231,12 @@ if ($section === 'scores' && $canScores) {
         <p class="muted"><a href="reports.php">&larr; Dashboard</a></p>
         <h1>Scores &amp; game cards</h1>
         <?php if ($scScope !== 'division'): ?>
-            <form method="get" action="reports.php" style="margin-bottom:12px">
+            <form method="get" action="reports.php" class="filter-form">
                 <input type="hidden" name="section" value="scores">
                 <label for="division">Division</label>
                 <select name="division" id="division" onchange="this.form.submit()">
                     <option value="">All divisions</option>
-                    <?php foreach ($rappMatchData->divisions() as $d): ?>
+                    <?php foreach ($rappMatchData->activeDivisions() as $d): ?>
                         <option value="<?= (int) $d['id'] ?>" <?= $divisionId === $d['id'] ? 'selected' : '' ?>><?= rapp_esc($d['name']) ?></option>
                     <?php endforeach; ?>
                 </select>
@@ -270,8 +273,8 @@ if ($section === 'scores' && $canScores) {
     <p class="lead">Signed in as <?= rapp_esc($ctx['name']) ?>.</p>
 
     <?php if ($canRappView): ?>
-        <h2 style="margin-top:14px">Referee abuse reports</h2>
-        <?php $list = $rappReports->listReports(200); ?>
+        <h2 class="mt-14">Referee abuse reports</h2>
+        <?php $list = $rappReportQueries->listReports(200); ?>
         <table class="rapp">
             <tr><th>#</th><th>Filed</th><th>Division</th><th>Match</th><th>By</th><th>Has audio</th><th>Status</th></tr>
             <?php foreach ($list as $row): ?>
@@ -290,7 +293,7 @@ if ($section === 'scores' && $canScores) {
     <?php endif; ?>
 
     <?php if ($canMatchData): ?>
-        <p style="margin-top:14px"><a class="btn secondary" href="reports.php?section=matchdata">Match data (staffing · issues · sanctions)<?= $mdScope === 'division' ? ' — your division' : '' ?></a></p>
+        <p class="mt-14"><a class="btn secondary" href="reports.php?section=matchdata">Match data (staffing · issues · sanctions)<?= $mdScope === 'division' ? ' — your division' : '' ?></a></p>
     <?php endif; ?>
     <?php if ($canScores): ?>
         <p><a class="btn secondary" href="reports.php?section=scores">Scores &amp; game cards<?= $scScope === 'division' ? ' — your division' : '' ?></a></p>

@@ -9,22 +9,27 @@ define('GSS88_CONFIG_FILES', GSS88_ROOT . '/config-ref-match-reporting');
 constants-model-match-and-sanction-db.php
 constants-sanction-detail-menus.php */
 
-define('GSS88_CONTROLLERS_UPLOAD', GSS88_ROOT . '/components-controllers-report-entry-AYSO-88');
+define('GSS88_CONTROLLERS_UPLOAD', GSS88_ROOT . '/controllers/controllers-match-report-entry-AYSO-88');
 /* controller-match-report-photo-upload.php
 controller-match-report-sanitize-and-enter.php */
 
 // NOTE: was 'GSS88_CONTROLLERS-UPDATES' (hyphen) - a hyphen in a bareword
 // constant name reads as subtraction wherever it's referenced, so this was
 // never actually usable and nothing could reference it correctly.
-define('GSS88_CONTROLLERS_UPDATES', GSS88_ROOT . '/components-controllers-reporting-updates-AYSO-88');
+define('GSS88_CONTROLLERS_UPDATES', GSS88_ROOT . '/controllers/controllers-match-issue-reports-AYSO-88');
 // controller-match-report-email.php
 // cronTest.php
 
-define('GSS88_MODELS_REPORTS', GSS88_ROOT . '/components-model-report-entry-AYSO-88');
-/* model-insert.php
-model-query.php */
+// Split 2026-10-02 into model-match-report-entry/ (match-data only) and
+// model-rapp-report-entry/ (RAPP only, used directly by rapp-bootstrap.php,
+// not via a constant here) -- was one combined model-match-report-entry-
+// AYSO-88/ directory holding both.
+define('GSS88_MODELS_REPORTS', GSS88_ROOT . '/models/model-match-report-entry');
+/* model-match-data-insert.php  -- match-data writes (match-report.php's only write path)
+model-match-data-query.php   -- match-data reads, shared with the RAPP dashboard;
+                                 also the notification email's one query */
 
-define('GSS88_VIEWS_REPORTS', GSS88_ROOT . '/components-view-report-entry-AYSO-88');
+define('GSS88_VIEWS_REPORTS', GSS88_ROOT . '/views/view-match-report-entry-AYSO-88');
 /*
 class-view-sanctions-reports-fieldset.php
 */

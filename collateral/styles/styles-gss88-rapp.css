@@ -1,0 +1,88 @@
+/* Shared chrome for every RAPP page (login, admin-login, users, reports,
+   report, media). Extracted from views/rapp-layout.php's rapp_layout_head()
+   -- that function used to embed this as an inline <style> block; gss88
+   doesn't do inline styling, external stylesheets only (see
+   styles-gss88-match-report-form.css for the match-report domain's own). */
+
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #eef1f4; color: #1c2530; }
+header.rapp-bar { background: #0b5f3b; color: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+header.rapp-bar a { color: #cdeede; text-decoration: none; }
+header.rapp-bar .who { font-size: 0.9em; opacity: 0.9; }
+main.rapp-wrap { max-width: 720px; margin: 24px auto; padding: 0 16px; }
+.card { background: #fff; border-radius: 10px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); margin-bottom: 18px; }
+h1 { font-size: 1.4rem; margin: 0 0 4px; }
+h2 { font-size: 1.1rem; margin: 0 0 10px; }
+p.lead { color: #4a5764; margin-top: 0; }
+.btn { display: inline-block; padding: 11px 18px; border-radius: 8px; background: #0b5f3b; color: #fff; border: 0; font-size: 1rem; cursor: pointer; text-decoration: none; }
+.btn:hover { background: #094c30; }
+.btn.secondary { background: #e3e8ec; color: #1c2530; }
+.btn.secondary:hover { background: #d3dade; }
+.btn.block { display: block; width: 100%; text-align: center; margin-bottom: 10px; }
+label { display: block; font-weight: 600; margin-bottom: 4px; }
+input[type=email], input[type=text], input[type=password], input[type=number], input[type=datetime-local], input[type=file], textarea, select { width: 100%; padding: 9px; border: 1px solid #b9c2cb; border-radius: 6px; font: inherit; margin-bottom: 14px; }
+textarea { min-height: 120px; resize: vertical; }
+.msg { padding: 10px 12px; border-radius: 6px; margin-bottom: 14px; }
+.msg.error { background: #fdecea; color: #b3261e; }
+.msg.ok { background: #e7f4ea; color: #1b5e20; }
+.msg.info { background: #e8f0fe; color: #174ea6; }
+.guidance { background: #fbf7e8; border: 1px solid #ecdfb0; border-radius: 8px; padding: 12px 14px; font-size: 0.92em; color: #5b4c1f; }
+/* Login library View fragments (see OtpLoginView) render .error/.notice and
+   plain <button type="submit">, not .msg/.btn -- these give that markup the
+   same look as the rest of the site instead of duplicating the form itself. */
+.error, .notice { padding: 10px 12px; border-radius: 6px; margin-bottom: 14px; }
+.error { background: #fdecea; color: #b3261e; }
+.notice { background: #e8f0fe; color: #174ea6; }
+form.secondary { margin-top: 10px; }
+.login-form h1, .login-form label, .login-form p.lead { text-align: center; }
+.login-form form button[type=submit] { display: block; width: 100%; text-align: center; margin-bottom: 10px; padding: 11px 18px; border-radius: 8px; background: #0b5f3b; color: #fff; border: 0; font-size: 1rem; cursor: pointer; }
+.login-form form button[type=submit]:hover { background: #094c30; }
+.login-form form.secondary button.linkish { background: #e3e8ec; color: #1c2530; }
+.login-form form.secondary button.linkish:hover { background: #d3dade; }
+.match-context { border: 1px solid #888; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; }
+.match-context legend { font-weight: 700; color: #000; padding: 0 6px; }
+.match-context dl { margin: 0; display: grid; grid-template-columns: 110px 1fr; gap: 4px 10px; }
+.match-context dt { color: #6b7683; font-size: 0.9em; }
+.match-context dd { margin: 0; }
+table.rapp { width: 100%; border-collapse: collapse; }
+table.rapp th, table.rapp td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #e3e8ec; font-size: 0.93em; }
+/* font-weight:normal here (not just the color/size) so .muted can sit inside
+   a heading -- e.g. "RAPP report #5 <span class="muted">— Acknowledged</span>"
+   in an <h1> -- without inheriting the heading's bold weight. */
+.muted { color: #6b7683; font-size: 0.9em; font-weight: normal; }
+
+/* -- report.php: guidance box's bullet list -------------------------------- */
+.guidance ul { margin: 6px 0 0 18px; padding: 0; }
+
+/* -- reports.php: report detail's written-account text --------------------
+   pre-wrap so a referee's own line breaks in what they typed are preserved. */
+.report-text { white-space: pre-wrap; }
+
+/* -- reports.php: report detail's retain/acknowledge/close button row ----- */
+.actions-row { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* -- reports.php: the division-picker forms above the match-data/scores
+   tables -- just a select that submits itself on change, no visual form
+   chrome of its own beyond spacing before the table below it. */
+.filter-form { margin-bottom: 12px; }
+
+/* -- users.php: a role/active checkbox's label, styled plainly instead of
+   the bold weight every other <label> gets (those label real form fields;
+   these sit next to their own checkbox, the bold weight would misread as
+   another field). */
+.checkbox-label { font-weight: normal; }
+
+/* -- users.php: the one-button "End now" form embedded in a table cell --
+   forms have a default top/bottom margin that looks like stray whitespace
+   inside a table row. */
+.inline-form { margin: 0; }
+
+/* Plain spacing, no other component-specific meaning -- kept as exact pixel
+   values rather than normalized to a smaller scale, so extracting these from
+   their old style="..." attributes changed nothing about how any page looks. */
+.mt-8 { margin-top: 8px; }
+.mt-10 { margin-top: 10px; }
+.mt-14 { margin-top: 14px; }
+.mt-16 { margin-top: 16px; }
+.mt-18 { margin-top: 18px; }

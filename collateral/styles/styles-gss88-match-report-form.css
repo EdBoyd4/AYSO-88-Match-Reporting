@@ -116,18 +116,25 @@ form {
   margin-top: 8px;
 }
 
-/* Fieldsets: no browser groove borders */
+/* Fieldsets: medium-grey outline, replacing the browser's default groove */
 fieldset {
-  border: 0;
+  border: 1px solid #888;
+  border-radius: 8px;
   margin: 0;
-  padding: 0;
+  padding: 8px 16px 16px;
 }
 
+/* width:auto (not 100%) so the legend sizes to its own text -- a full-width
+   legend swallows almost the entire top border, leaving no border line
+   anywhere near the title and reading as a large empty band around it. */
 legend {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  margin: 0 auto 4px;
+  padding: 0 8px;
   text-align: center;
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-weight: 700;
+  color: #000;
 }
 
 /* MATCH DETAILS: responsive grid inside the fieldset */
@@ -138,7 +145,8 @@ legend {
 }
 
 .match-descriptor__legend {
-  grid-column: 1 / -1;          /* legend spans full width */
+  grid-column: 1 / -1;          /* legend's row spans full width... */
+  justify-self: center;         /* ...but the legend box itself doesn't stretch to fill it */
 }
 
 .match-descriptor__group {
@@ -244,6 +252,23 @@ textarea:required:valid {
 .section_sanction-entry,
 .section_match-issue {
   margin-top: 8px;
+}
+
+/* MATCH SCORE: a segment inside match-descriptor's own fieldset, not a
+   fieldset of its own -- __legend is a plain <p> now (not a <legend>, which
+   can only be a fieldset's direct child) so it needs its own
+   bold/black/centered styling instead of inheriting the `legend` rule. */
+.match-score-descriptor {
+  grid-column: 1 / -1;          /* match-descriptor__legend spans the same way at the 2-col breakpoint */
+  margin-top: 12px;
+}
+
+.match-score-descriptor__legend {
+  width: 100%;
+  text-align: center;
+  font-weight: 700;
+  color: #000;
+  margin: 0 0 8px;
 }
 
 /* MATCH SCORE: home/away side by side and centered — scores are always
@@ -423,6 +448,13 @@ textarea:required:valid {
   margin: 0 auto;
 }
 
+.modal-instruction {
+  font-weight: 700;
+  color: #000;
+  text-align: center;
+  margin: 0 0 12px;
+}
+
 /* Modal close button */
 .close {
   color: #aaa;
@@ -551,3 +583,30 @@ button:focus-visible,
 .p_sanction-description {
   justify-content: center;
 }
+
+/* -- The optional "also report abuse" (RAPP) section -----------------------
+   New here for that section specifically; .guidance/.msg/.muted mirror the
+   equivalent classes in the RAPP module's own stylesheet (styles-gss88-
+   rapp.css) so the same visual language (a soft yellow "before you record"
+   box, red/blue/green message boxes) carries across both, adapted to this
+   page's own --primary/--muted variables rather than copied wholesale. */
+.muted { color: var(--muted); font-size: 0.9em; }
+
+.guidance {
+  background: #fbf7e8;
+  border: 1px solid #ecdfb0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.92em;
+  color: #5b4c1f;
+  text-align: left;
+}
+.guidance ul { margin: 6px 0 0 18px; padding: 0; }
+
+.msg { padding: 10px 12px; border-radius: 6px; margin: 8px 0; font-size: 0.92em; }
+.msg.error { background: #fdecea; color: #b3261e; }
+.msg.info { background: #e8f0fe; color: #174ea6; }
+.msg.ok { background: #e7f4ea; color: #1b5e20; }
+
+#rapp-otp-code-row { margin-top: 8px; }
+#rapp-report-fields { margin-top: 8px; }

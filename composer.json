@@ -1,5 +1,12 @@
 {
     "name": "ed-boyd/xnbglkce",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../boyds-little-login-library-for-php",
+            "options": { "symlink": true }
+        }
+    ],
     "autoload": {
         "psr-4": {
             "EdBoyd\\Xnbglkce\\": "src/"
@@ -12,6 +19,7 @@
         }
     ],
     "require": {
-        "phpmailer/phpmailer": "^6.10"
+        "phpmailer/phpmailer": "^6.10",
+        "ed-boyd/boyds-little-login-library-for-php": "dev-main"
     }
 }

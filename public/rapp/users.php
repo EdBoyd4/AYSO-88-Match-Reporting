@@ -1,16 +1,16 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../rapp/config/rapp-bootstrap.php';
-require_once __DIR__ . '/../../rapp/src/rapp-layout.php';
+require_once __DIR__ . '/../../controllers/rapp-bootstrap.php';
+require_once __DIR__ . '/../../views/rapp-layout.php';
 
 $basePath = $rappConfig['base_path'];
-$ctx = rapp_require('users.manage', $pdo, $authManager, $sessionManager, $accessPolicy, $basePath);
+$ctx = rapp_require('users.manage', $userAccessPdo, $authManager, $sessionManager, $accessPolicy, $basePath, '/admin-login.php');
 $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 
 $allRoles = $userRepository->getAllRoles();          // [role_id => role_name]
 $roleIdByName = array_flip($allRoles);
-$divisions = $rappMatchData->divisions();
+$divisions = $rappMatchData->activeDivisions();
 $error = null;
 $notice = null;
 
@@ -21,16 +21,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'add') {
         $email = strtolower(trim((string) ($_POST['email'] ?? '')));
         $name = trim((string) ($_POST['full_name'] ?? ''));
+        $password = (string) ($_POST['password'] ?? '');
         $roleIds = array_map('intval', (array) ($_POST['roles'] ?? []));
         $divId = ($_POST['division_id'] ?? '') !== '' ? (int) $_POST['division_id'] : null;
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $name === '') {
             $error = 'A valid email and a name are required.';
+        } elseif (strlen($password) < 10) {
+            $error = 'Password must be at least 10 characters.';
         } elseif ($roleIds === []) {
             $error = 'Choose at least one role.';
         } else {
             try {
-                $userRepository->addUser($email, bin2hex(random_bytes(24)), $roleIds);
+                $userRepository->addUser($email, $password, $roleIds);
                 $newId = $rappUserAdmin->userIdByEmail($email);
                 $rappUserAdmin->upsertProfile((int) $newId, $name, $divId, true);
                 $auditRepository->logEvent('rapp_user_added', $ip, $ctx['email'], $email . ' roles=' . implode('|', array_map(fn ($r) => $allRoles[$r] ?? $r, $roleIds)));
@@ -42,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'update') {
         $uid = (int) ($_POST['user_id'] ?? 0);
         $name = trim((string) ($_POST['full_name'] ?? ''));
+        $newPassword = (string) ($_POST['new_password'] ?? '');
         $roleIds = array_map('intval', (array) ($_POST['roles'] ?? []));
         $divId = ($_POST['division_id'] ?? '') !== '' ? (int) $_POST['division_id'] : null;
         $isActive = isset($_POST['is_active']);
@@ -50,10 +54,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'You cannot remove your own RRA access or deactivate yourself.';
         } elseif ($name === '' || $roleIds === []) {
             $error = 'A name and at least one role are required.';
+        } elseif ($newPassword !== '' && strlen($newPassword) < 10) {
+            $error = 'New password must be at least 10 characters.';
         } else {
             $rappUserAdmin->setRoles($uid, $roleIds);
             $rappUserAdmin->upsertProfile($uid, $name, $divId, $isActive);
-            $auditRepository->logEvent('rapp_user_updated', $ip, $ctx['email'], 'user #' . $uid);
+            if ($newPassword !== '') {
+                $userRepository->updatePassword($uid, $newPassword);
+            }
+            $auditRepository->logEvent('rapp_user_updated', $ip, $ctx['email'], 'user #' . $uid . ($newPassword !== '' ? ' (password reset)' : ''));
             $notice = 'Updated.';
         }
     } elseif ($action === 'alt_add') {
@@ -63,12 +72,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($altId <= 0 || $starts === '') {
             $error = 'Pick a person and a start date/time.';
         } else {
-            $rappReports->addAlternate($altId, $ctx['user_id'], str_replace('T', ' ', $starts), $ends !== '' ? str_replace('T', ' ', $ends) : null);
+            $rappReportInserter->addAlternate($altId, $ctx['user_id'], str_replace('T', ' ', $starts), $ends !== '' ? str_replace('T', ' ', $ends) : null);
             $auditRepository->logEvent('rapp_alternate_activated', $ip, $ctx['email'], 'alt user #' . $altId);
             $notice = 'Alternate activated.';
         }
     } elseif ($action === 'alt_remove') {
-        $rappReports->deactivateAlternate((int) ($_POST['alt_id'] ?? 0));
+        $rappReportInserter->deactivateAlternate((int) ($_POST['alt_id'] ?? 0));
         $auditRepository->logEvent('rapp_alternate_deactivated', $ip, $ctx['email'], 'alt row #' . (int) ($_POST['alt_id'] ?? 0));
         $notice = 'Alternate ended.';
     }
@@ -81,7 +90,7 @@ $editUser = $editId > 0 ? $rappUserAdmin->findUser($editId) : null;
 rapp_layout_head('Manage users', $ctx['name'], $basePath);
 ?>
 <div class="card">
-    <p class="muted"><a href="<?= rapp_esc($basePath) ?>/index.php">&larr; Home</a></p>
+    <p class="muted"><a href="<?= rapp_esc($basePath) ?>/reports.php">&larr; Home</a></p>
     <h1>Manage users</h1>
     <?php if ($error): ?><div class="msg error"><?= rapp_esc($error) ?></div><?php endif; ?>
     <?php if ($notice): ?><div class="msg ok"><?= rapp_esc($notice) ?></div><?php endif; ?>
@@ -96,17 +105,19 @@ rapp_layout_head('Manage users', $ctx['name'], $basePath);
             <input type="text" id="full_name" name="full_name" value="<?= rapp_esc($editUser['full_name']) ?>" required>
             <label>Roles</label>
             <?php foreach ($allRoles as $rid => $rname): ?>
-                <label style="font-weight:normal"><input type="checkbox" name="roles[]" value="<?= (int) $rid ?>"
+                <label class="checkbox-label"><input type="checkbox" name="roles[]" value="<?= (int) $rid ?>"
                     <?= in_array($rname, (array) $editUser['roles'], true) ? 'checked' : '' ?>> <?= rapp_esc($rname) ?></label>
             <?php endforeach; ?>
-            <label for="division_id" style="margin-top:10px">Division (DC only)</label>
+            <label for="division_id" class="mt-10">Division (DC only)</label>
             <select name="division_id" id="division_id">
                 <option value="">—</option>
                 <?php foreach ($divisions as $d): ?>
                     <option value="<?= (int) $d['id'] ?>" <?= (int) $editUser['division_id'] === $d['id'] ? 'selected' : '' ?>><?= rapp_esc($d['name']) ?></option>
                 <?php endforeach; ?>
             </select>
-            <label style="font-weight:normal; margin-top:8px"><input type="checkbox" name="is_active" <?= (int) $editUser['is_active'] === 1 ? 'checked' : '' ?>> Active</label>
+            <label class="checkbox-label mt-8"><input type="checkbox" name="is_active" <?= (int) $editUser['is_active'] === 1 ? 'checked' : '' ?>> Active</label>
+            <label for="new_password" class="mt-10">Reset password <span class="muted">(leave blank to keep current)</span></label>
+            <input type="password" id="new_password" name="new_password" autocomplete="new-password" minlength="10">
             <button class="btn block" type="submit">Save</button>
             <p class="muted"><a href="users.php">Cancel</a></p>
         </form>
@@ -125,7 +136,7 @@ rapp_layout_head('Manage users', $ctx['name'], $basePath);
             <?php endforeach; ?>
         </table>
 
-        <h2 style="margin-top:18px">Add a user</h2>
+        <h2 class="mt-18">Add a user</h2>
         <form method="post" action="users.php">
             <input type="hidden" name="csrf_token" value="<?= rapp_esc($csrf) ?>">
             <input type="hidden" name="action" value="add">
@@ -133,11 +144,13 @@ rapp_layout_head('Manage users', $ctx['name'], $basePath);
             <input type="email" id="a_email" name="email" required>
             <label for="a_name">Full name</label>
             <input type="text" id="a_name" name="full_name" required>
+            <label for="a_password">Password</label>
+            <input type="password" id="a_password" name="password" autocomplete="new-password" minlength="10" required>
             <label>Roles</label>
             <?php foreach ($allRoles as $rid => $rname): ?>
-                <label style="font-weight:normal"><input type="checkbox" name="roles[]" value="<?= (int) $rid ?>"> <?= rapp_esc($rname) ?></label>
+                <label class="checkbox-label"><input type="checkbox" name="roles[]" value="<?= (int) $rid ?>"> <?= rapp_esc($rname) ?></label>
             <?php endforeach; ?>
-            <label for="a_div" style="margin-top:10px">Division (DC only)</label>
+            <label for="a_div" class="mt-10">Division (DC only)</label>
             <select name="division_id" id="a_div">
                 <option value="">—</option>
                 <?php foreach ($divisions as $d): ?>
@@ -155,13 +168,13 @@ rapp_layout_head('Manage users', $ctx['name'], $basePath);
     notifications and can view reports for the active period.</p>
     <table class="rapp">
         <tr><th>Person</th><th>From</th><th>Until</th><th></th></tr>
-        <?php foreach ($rappReports->listActiveAlternates() as $a): ?>
+        <?php foreach ($rappReportQueries->listActiveAlternates() as $a): ?>
             <tr>
                 <td><?= rapp_esc($a['full_name'] ?: $a['email']) ?></td>
                 <td><?= rapp_esc($a['starts_at']) ?></td>
                 <td><?= rapp_esc($a['ends_at'] ?? 'until ended') ?></td>
                 <td>
-                    <form method="post" action="users.php" style="margin:0">
+                    <form method="post" action="users.php" class="inline-form">
                         <input type="hidden" name="csrf_token" value="<?= rapp_esc($csrf) ?>">
                         <input type="hidden" name="action" value="alt_remove">
                         <input type="hidden" name="alt_id" value="<?= (int) $a['_id'] ?>">
@@ -171,7 +184,7 @@ rapp_layout_head('Manage users', $ctx['name'], $basePath);
             </tr>
         <?php endforeach; ?>
     </table>
-    <form method="post" action="users.php" style="margin-top:10px">
+    <form method="post" action="users.php" class="mt-10">
         <input type="hidden" name="csrf_token" value="<?= rapp_esc($csrf) ?>">
         <input type="hidden" name="action" value="alt_add">
         <label for="alt_user">Person</label>

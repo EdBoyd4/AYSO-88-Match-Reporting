@@ -9,13 +9,13 @@ declare(strict_types=1);
  *   /rapp/media.php?id=<rapp_media._id>
  */
 
-require_once __DIR__ . '/../../rapp/config/rapp-bootstrap.php';
+require_once __DIR__ . '/../../controllers/rapp-bootstrap.php';
 
 $basePath = $rappConfig['base_path'];
-$ctx = rapp_require('rapp.view', $pdo, $authManager, $sessionManager, $accessPolicy, $basePath);
+$ctx = rapp_require('rapp.view', $userAccessPdo, $authManager, $sessionManager, $accessPolicy, $basePath, '/admin-login.php');
 
 $mediaId = (int) ($_GET['id'] ?? 0);
-$media = $mediaId > 0 ? $rappReports->findMedia($mediaId) : null;
+$media = $mediaId > 0 ? $rappReportQueries->findMedia($mediaId) : null;
 
 if ($media === null || $media['purged_at'] !== null) {
     http_response_code(404);
@@ -33,7 +33,7 @@ if ($path === null || !is_file($path)) {
     exit;
 }
 
-$rappReports->logMediaAccess((int) $media['rapp_report_id'], $ctx['user_id']);
+$rappReportInserter->logMediaAccess((int) $media['rapp_report_id'], $ctx['user_id'], (string) $ctx['user_source']);
 $auditRepository->logEvent('rapp_media_played', $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0', $ctx['email'], 'media #' . $mediaId . ' report #' . $media['rapp_report_id']);
 
 $size = filesize($path);

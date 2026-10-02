@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../rapp/config/rapp-bootstrap.php';
+require_once __DIR__ . '/../../controllers/rapp-bootstrap.php';
 
 $authManager->logout($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
-header('Location: ' . $rappConfig['base_path'] . '/index.php');
+// Not the RAPP hub (removed) -- the general two-choice landing page.
+header('Location: /login.php');
 exit;
