@@ -14,3 +14,4 @@ public/RAPPReports/
 
 # Prevent stray nested git pointers
 public/.git
+vendor/
