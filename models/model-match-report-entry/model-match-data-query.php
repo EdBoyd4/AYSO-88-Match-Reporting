@@ -184,6 +184,123 @@ final class MatchDataQueries
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // -- RAPP admin dashboard: one screen each for staffing / issues / sanctions
+    //
+    // These replaced the single combined "Match data" list. Each is a flat,
+    // single-purpose table (sanctions is one row per sanction, not per match),
+    // limited to the last $days days and optionally to one division. A
+    // whitespace-only issue counts as no issue (the form's issue textarea can
+    // submit just spaces).
+
+    /**
+     * Matches whose report recorded a referee staffing issue.
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function staffingIssues(?int $divisionId, int $days = 90): array
+    {
+        return $this->reportedTextIssues('ref_staffing_issue', $divisionId, $days);
+    }
+
+    /**
+     * Matches whose report recorded an "other" (non-staffing) issue.
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function matchIssues(?int $divisionId, int $days = 90): array
+    {
+        return $this->reportedTextIssues('match_issue', $divisionId, $days);
+    }
+
+    /**
+     * Every sanction issued, one row each, newest match first.
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function sanctionsList(?int $divisionId, int $days = 90): array
+    {
+        [$where, $params] = $this->recentMatchesScope($divisionId, $days);
+
+        $stmt = $this->pdo->prepare(
+            "SELECT sm._id AS match_id,
+                    sm.match_date, DATE_FORMAT(sm.match_time,'%H:%i') AS match_time,
+                    sm.home_team, sm.away_team,
+                    d.division_name, f.field_name,
+                    s.sanction_number_in_match, s.sanction_level, s.sanctioned_party,
+                    s.party_description, s.event_description
+             FROM sanctions s
+             JOIN scheduled_matches sm ON sm._id = s.match_id
+             LEFT JOIN divisions_with_coordinators d ON d._id = sm.division
+             LEFT JOIN fields f ON f._id = sm.field
+             WHERE $where
+             ORDER BY sm.match_date DESC, sm.match_time DESC, s.sanction_number_in_match
+             LIMIT 300"
+        );
+        $this->executeWithInts($stmt, $params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Shared body of staffingIssues()/matchIssues(): they differ only in which
+     * match_reports column holds the text. $column is never user input -- both
+     * callers pass a literal -- but is still checked against that allowlist.
+     *
+     * @param 'ref_staffing_issue'|'match_issue' $column
+     * @return list<array<string,mixed>>
+     */
+    private function reportedTextIssues(string $column, ?int $divisionId, int $days): array
+    {
+        if (!in_array($column, ['ref_staffing_issue', 'match_issue'], true)) {
+            throw new InvalidArgumentException('Unknown issue column: ' . $column);
+        }
+        [$where, $params] = $this->recentMatchesScope($divisionId, $days);
+
+        $stmt = $this->pdo->prepare(
+            "SELECT sm._id AS match_id,
+                    sm.match_date, DATE_FORMAT(sm.match_time,'%H:%i') AS match_time,
+                    sm.home_team, sm.away_team,
+                    d.division_name, f.field_name,
+                    o.referee_1, o.referee_2, o.referee_3,
+                    mr.$column AS issue_text
+             FROM match_reports mr
+             JOIN scheduled_matches sm ON sm._id = mr.match_id
+             LEFT JOIN divisions_with_coordinators d ON d._id = sm.division
+             LEFT JOIN fields f ON f._id = sm.field
+             LEFT JOIN officiants o ON o.match_id = sm._id
+             WHERE $where AND TRIM(COALESCE(mr.$column, '')) <> ''
+             ORDER BY sm.match_date DESC, sm.match_time DESC
+             LIMIT 300"
+        );
+        $this->executeWithInts($stmt, $params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * WHERE fragment + named params limiting scheduled_matches (aliased sm) to
+     * the last $days days and, if given, one division.
+     *
+     * @return array{0:string,1:array<string,int>}
+     */
+    private function recentMatchesScope(?int $divisionId, int $days): array
+    {
+        $where = 'sm.match_date >= (CURDATE() - INTERVAL :days DAY)';
+        $params = ['days' => $days];
+        if ($divisionId !== null) {
+            $where .= ' AND sm.division = :div';
+            $params['div'] = $divisionId;
+        }
+        return [$where, $params];
+    }
+
+    /** Binds every param as an integer (INTERVAL/division ids), then runs the statement. */
+    private function executeWithInts(PDOStatement $stmt, array $params): void
+    {
+        foreach ($params as $name => $value) {
+            $stmt->bindValue(':' . $name, $value, PDO::PARAM_INT);
+        }
+        $stmt->execute();
+    }
+
     /** @return list<array<string,mixed>> */
     public function sanctionsForMatch(int $scheduledMatchId): array
     {

@@ -31,6 +31,36 @@
 - [ ] 
 
 ## 📌 Next Tasks
+- [ ] Fold config-ref-match-reporting/constants-model-GSS-88-match-and-
+      sanction-db.php's $dbhost/$dbname/$dbuser/$dbpass into .env (2026-10-02).
+      match-report.php's direct PDO connection reads credentials from this
+      separate, rarely-touched file instead of .env like everything else
+      (rapp-bootstrap.php's four database connections). Because it's
+      gitignored and essentially never edited, it silently drifts out of
+      sync -- hit this during today's git-based production cutover: it still
+      had the OLD database name (xnbglkce_gss88cardreports, pre-split) and
+      had to be hand-patched on the server after the fact. One source of
+      truth (.env) removes this whole class of bug; $matchDataPdo in
+      match-report.php should build its connection from the same $cfgVal-
+      style env lookup rapp-bootstrap.php already uses, not a separate file.
+- [ ] Pull the hardcoded SMTP password out of controller-match-report-
+      email.php into .env too (2026-10-02) -- same root cause as the DB-
+      credentials item above (a real secret sitting in version-controlled
+      PHP source instead of .env), surfaced while filling in production's
+      .env during the git cutover: GSS88_SMTP_HOST/PORT/SECURE/USER were
+      confirmed correct by matching them against this file's hardcoded
+      values, but the password itself ($mail->Password =
+      'region88AYSO!Remembers') is sitting in plaintext in a file that's
+      tracked in git -- and as of today's cutover, pushed to GitHub. RappNotifier
+      already takes its SMTP config as a constructor array from .env
+      (rapp-bootstrap.php's $smtp); controller-match-report-email.php should
+      be refactored to do the same instead of hardcoding its own copy.
+- [ ] Rotate the gss88.org SMTP password (sanctionReports@gss88.org,
+      currently region88AYSO!Remembers) (2026-10-02) -- it's now sitting in
+      the GitHub repo's commit history as of today's cutover (see the item
+      above). Changing the password at the mail host and updating .env (and
+      removing/replacing the hardcoded copy per the item above) closes the
+      exposure; the git history itself can't be un-published after the fact.
 - [ ] update git and github
 - [ ] add login library compatability
 - [ ] table report for previous week - with gamecard photos

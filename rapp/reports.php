@@ -41,6 +41,21 @@ $notice   = null;
 $sanctionLevel = static fn ($v) => (int) $v === 0 ? 'Caution' : 'Send-off';
 $sanctionParty = static fn ($v) => (int) $v === 0 ? 'Player' : 'Coach';
 
+// The three match-data screens (all gated by matchdata.view), keyed by their
+// ?section= value. Replaced the single combined "Match data" list.
+$matchDataScreens = [
+    'staffing'  => 'Staffing issues',
+    'issues'    => 'Match issues',
+    'sanctions' => 'Sanctions',
+];
+
+// Whose matches the match-data screens list: a division-scoped user (DC) is
+// pinned to their own division; everyone else sees all divisions unless the
+// ?division= filter narrows it. null = all divisions.
+$matchDataDivision = $mdScope === 'division'
+    ? $ctx['division_id']
+    : (isset($_GET['division']) && $_GET['division'] !== '' ? (int) $_GET['division'] : null);
+
 // ---------------------------------------------------------------------------
 // POST: retain / close actions on a RAPP report
 // ---------------------------------------------------------------------------
@@ -134,83 +149,111 @@ if ($reportId > 0 && $canRappView) {
 }
 
 // ===========================================================================
-// Section: match data (staffing / issues / sanctions)
+// Match detail (reached from any of the three match-data screens)
 // ===========================================================================
-if ($section === 'matchdata' && $canMatchData) {
-    $matchId = (int) ($_GET['match'] ?? 0);
-    $divisionId = $mdScope === 'division'
-        ? $ctx['division_id']
-        : (isset($_GET['division']) && $_GET['division'] !== '' ? (int) $_GET['division'] : null);
+$matchId = (int) ($_GET['match'] ?? 0);
+if ($section === 'matchdata' && $canMatchData && $matchId > 0) {
+    // Back link returns to whichever list the user came from.
+    $from = (string) ($_GET['from'] ?? '');
+    $backHref  = isset($matchDataScreens[$from]) ? 'reports.php?section=' . $from : 'reports.php';
+    $backLabel = $matchDataScreens[$from] ?? 'Dashboard';
 
-    if ($matchId > 0) {
-        $row = $rappMatchData->matchRow($matchId);
-        if ($row && !$accessPolicy->canForDivision($roles, 'matchdata.view', (int) $row['division_id'], $ctx['division_id'])) {
-            $row = null;
-        }
-        ?>
-        <div class="card">
-            <p class="muted"><a href="reports.php?section=matchdata">&larr; Match data</a></p>
-            <?php if ($row === null): ?>
-                <p class="msg error">Not available.</p>
-            <?php else: ?>
-                <h1><?= rapp_esc($row['match_date'] . ' ' . $row['match_time']) ?></h1>
-                <table class="rapp">
-                    <tr><th>Division / field</th><td><?= rapp_esc(($row['division_name'] ?? '?') . ' — ' . ($row['field_name'] ?? '?')) ?></td></tr>
-                    <tr><th>Teams</th><td><?= rapp_esc($row['home_team'] . ' v ' . $row['away_team']) ?></td></tr>
-                    <tr><th>Referees</th><td><?= rapp_esc(trim(implode(', ', array_filter([$row['referee_1'], $row['referee_2'], $row['referee_3']])))) ?: '—' ?></td></tr>
-                    <?php if ($canScores): ?>
-                        <tr><th>Score</th><td><?= $row['home_score'] === null ? '—' : ((int) $row['home_score'] . ' – ' . (int) $row['away_score']) ?></td></tr>
-                    <?php endif; ?>
-                    <tr><th>Staffing issue</th><td><?= rapp_esc($row['ref_staffing_issue'] ?? '') ?: '—' ?></td></tr>
-                    <tr><th>Other issue</th><td><?= rapp_esc($row['match_issue'] ?? '') ?: '—' ?></td></tr>
-                </table>
-                <?php $sanctions = $rappMatchData->sanctionsForMatch($matchId); ?>
-                <h2 class="mt-16">Sanctions (<?= count($sanctions) ?>)</h2>
-                <?php foreach ($sanctions as $s): ?>
-                    <p><strong>#<?= (int) $s['sanction_number_in_match'] ?> <?= rapp_esc($sanctionLevel($s['sanction_level'])) ?></strong>
-                        — <?= rapp_esc($sanctionParty($s['sanctioned_party'])) ?>: <?= rapp_esc($s['party_description']) ?><br>
-                        <span class="muted"><?= rapp_esc($s['event_description']) ?></span></p>
-                <?php endforeach; ?>
-                <?php if ($sanctions === []): ?><p class="muted">None.</p><?php endif; ?>
-            <?php endif; ?>
-        </div>
-        <?php
-        rapp_layout_foot();
-        return;
+    $row = $rappMatchData->matchRow($matchId);
+    if ($row && !$accessPolicy->canForDivision($roles, 'matchdata.view', (int) $row['division_id'], $ctx['division_id'])) {
+        $row = null;
     }
+    ?>
+    <div class="card">
+        <p class="muted"><a href="<?= rapp_esc($backHref) ?>">&larr; <?= rapp_esc($backLabel) ?></a></p>
+        <?php if ($row === null): ?>
+            <p class="msg error">Not available.</p>
+        <?php else: ?>
+            <h1><?= rapp_esc($row['match_date'] . ' ' . $row['match_time']) ?></h1>
+            <table class="rapp">
+                <tr><th>Division / field</th><td><?= rapp_esc(($row['division_name'] ?? '?') . ' — ' . ($row['field_name'] ?? '?')) ?></td></tr>
+                <tr><th>Teams</th><td><?= rapp_esc($row['home_team'] . ' v ' . $row['away_team']) ?></td></tr>
+                <tr><th>Referees</th><td><?= rapp_esc(trim(implode(', ', array_filter([$row['referee_1'], $row['referee_2'], $row['referee_3']])))) ?: '—' ?></td></tr>
+                <?php if ($canScores): ?>
+                    <tr><th>Score</th><td><?= $row['home_score'] === null ? '—' : ((int) $row['home_score'] . ' – ' . (int) $row['away_score']) ?></td></tr>
+                <?php endif; ?>
+                <tr><th>Staffing issue</th><td><?= rapp_esc($row['ref_staffing_issue'] ?? '') ?: '—' ?></td></tr>
+                <tr><th>Other issue</th><td><?= rapp_esc($row['match_issue'] ?? '') ?: '—' ?></td></tr>
+            </table>
+            <?php $sanctions = $rappMatchData->sanctionsForMatch($matchId); ?>
+            <h2 class="mt-16">Sanctions (<?= count($sanctions) ?>)</h2>
+            <?php foreach ($sanctions as $s): ?>
+                <p><strong>#<?= (int) $s['sanction_number_in_match'] ?> <?= rapp_esc($sanctionLevel($s['sanction_level'])) ?></strong>
+                    — <?= rapp_esc($sanctionParty($s['sanctioned_party'])) ?>: <?= rapp_esc($s['party_description']) ?><br>
+                    <span class="muted"><?= rapp_esc($s['event_description']) ?></span></p>
+            <?php endforeach; ?>
+            <?php if ($sanctions === []): ?><p class="muted">None.</p><?php endif; ?>
+        <?php endif; ?>
+    </div>
+    <?php
+    rapp_layout_foot();
+    return;
+}
 
-    $rows = $rappMatchData->matchesWithData($divisionId, 90, true);
+// ===========================================================================
+// Sections: staffing issues / match issues / sanctions -- one table each
+// ===========================================================================
+if (isset($matchDataScreens[$section]) && $canMatchData) {
+    // A division-scoped user with no division on their profile has
+    // $matchDataDivision === null, which the queries read as "all divisions" --
+    // list nothing for them instead.
+    $rows = ($mdScope === 'division' && $matchDataDivision === null) ? [] : match ($section) {
+        'staffing'  => $rappMatchData->staffingIssues($matchDataDivision),
+        'issues'    => $rappMatchData->matchIssues($matchDataDivision),
+        'sanctions' => $rappMatchData->sanctionsList($matchDataDivision),
+    };
+    $colspan = $section === 'sanctions' ? 6 : 5;
     ?>
     <div class="card">
         <p class="muted"><a href="reports.php">&larr; Dashboard</a></p>
-        <h1>Match data</h1>
+        <h1><?= rapp_esc($matchDataScreens[$section]) ?></h1>
         <?php if ($mdScope === 'division'): ?>
             <p class="muted">Your division only.</p>
         <?php else: ?>
             <form method="get" action="reports.php" class="filter-form">
-                <input type="hidden" name="section" value="matchdata">
+                <input type="hidden" name="section" value="<?= rapp_esc($section) ?>">
                 <label for="division">Division</label>
                 <select name="division" id="division" onchange="this.form.submit()">
                     <option value="">All divisions</option>
                     <?php foreach ($rappMatchData->activeDivisions() as $d): ?>
-                        <option value="<?= (int) $d['id'] ?>" <?= $divisionId === $d['id'] ? 'selected' : '' ?>><?= rapp_esc($d['name']) ?></option>
+                        <option value="<?= (int) $d['id'] ?>" <?= $matchDataDivision === $d['id'] ? 'selected' : '' ?>><?= rapp_esc($d['name']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </form>
         <?php endif; ?>
         <table class="rapp">
-            <tr><th>Date</th><th>Division</th><th>Field</th><th>Issues</th><th>Sanctions</th><th></th></tr>
+            <?php if ($section === 'staffing'): ?>
+                <tr><th>When</th><th>Division / field</th><th>Referees</th><th>Staffing issue</th><th></th></tr>
+            <?php elseif ($section === 'issues'): ?>
+                <tr><th>When</th><th>Division / field</th><th>Match</th><th>Issue</th><th></th></tr>
+            <?php else: ?>
+                <tr><th>When</th><th>Division / field</th><th>Match</th><th>Sanction</th><th>Details</th><th></th></tr>
+            <?php endif; ?>
             <?php foreach ($rows as $row): ?>
                 <tr>
                     <td><?= rapp_esc($row['match_date'] . ' ' . $row['match_time']) ?></td>
-                    <td><?= rapp_esc($row['division_name'] ?? '?') ?></td>
-                    <td><?= rapp_esc($row['field_name'] ?? '?') ?></td>
-                    <td><?= $row['ref_staffing_issue'] ? 'staffing ' : '' ?><?= $row['match_issue'] ? 'other' : '' ?><?= (!$row['ref_staffing_issue'] && !$row['match_issue']) ? '—' : '' ?></td>
-                    <td><?= (int) $row['sanction_count'] ?></td>
-                    <td><a href="reports.php?section=matchdata&match=<?= (int) $row['_id'] ?>">view</a></td>
+                    <td><?= rapp_esc(($row['division_name'] ?? '?') . ' — ' . ($row['field_name'] ?? '?')) ?></td>
+                    <?php if ($section === 'staffing'): ?>
+                        <td><?= rapp_esc(trim(implode(', ', array_filter([$row['referee_1'], $row['referee_2'], $row['referee_3']])))) ?: '—' ?></td>
+                        <td class="report-text"><?= rapp_esc($row['issue_text']) ?></td>
+                    <?php elseif ($section === 'issues'): ?>
+                        <td><?= rapp_esc($row['home_team'] . ' v ' . $row['away_team']) ?></td>
+                        <td class="report-text"><?= rapp_esc($row['issue_text']) ?></td>
+                    <?php else: ?>
+                        <td><?= rapp_esc($row['home_team'] . ' v ' . $row['away_team']) ?></td>
+                        <td>#<?= (int) $row['sanction_number_in_match'] ?> <?= rapp_esc($sanctionLevel($row['sanction_level'])) ?><br>
+                            <span class="muted"><?= rapp_esc($sanctionParty($row['sanctioned_party'])) ?></span></td>
+                        <td><?= rapp_esc($row['party_description']) ?><br>
+                            <span class="muted report-text"><?= rapp_esc($row['event_description']) ?></span></td>
+                    <?php endif; ?>
+                    <td><a href="reports.php?section=matchdata&match=<?= (int) $row['match_id'] ?>&from=<?= rapp_esc($section) ?>">view</a></td>
                 </tr>
             <?php endforeach; ?>
-            <?php if ($rows === []): ?><tr><td colspan="6" class="muted">Nothing in the last 90 days.</td></tr><?php endif; ?>
+            <?php if ($rows === []): ?><tr><td colspan="<?= $colspan ?>" class="muted">Nothing in the last 90 days.</td></tr><?php endif; ?>
         </table>
     </div>
     <?php
@@ -293,7 +336,9 @@ if ($section === 'scores' && $canScores) {
     <?php endif; ?>
 
     <?php if ($canMatchData): ?>
-        <p class="mt-14"><a class="btn secondary" href="reports.php?section=matchdata">Match data (staffing · issues · sanctions)<?= $mdScope === 'division' ? ' — your division' : '' ?></a></p>
+        <?php foreach (array_keys($matchDataScreens) as $i => $key): ?>
+            <p<?= $i === 0 ? ' class="mt-14"' : '' ?>><a class="btn secondary" href="reports.php?section=<?= rapp_esc($key) ?>"><?= rapp_esc($matchDataScreens[$key]) ?><?= $mdScope === 'division' ? ' — your division' : '' ?></a></p>
+        <?php endforeach; ?>
     <?php endif; ?>
     <?php if ($canScores): ?>
         <p><a class="btn secondary" href="reports.php?section=scores">Scores &amp; game cards<?= $scScope === 'division' ? ' — your division' : '' ?></a></p>
