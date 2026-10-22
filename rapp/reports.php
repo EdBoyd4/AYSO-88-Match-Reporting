@@ -25,6 +25,7 @@ $canRappView  = $accessPolicy->can($roles, 'rapp.view');
 $canRappRetain = $accessPolicy->can($roles, 'rapp.retain');
 $canMatchData = $accessPolicy->can($roles, 'matchdata.view');
 $canScores    = $accessPolicy->can($roles, 'scores.view');
+$canManageUsers = $accessPolicy->can($roles, 'users.manage');
 $mdScope = $accessPolicy->scopeFor($roles, 'matchdata.view');
 $scScope = $accessPolicy->scopeFor($roles, 'scores.view');
 
@@ -342,6 +343,9 @@ if ($section === 'scores' && $canScores) {
     <?php endif; ?>
     <?php if ($canScores): ?>
         <p><a class="btn secondary" href="reports.php?section=scores">Scores &amp; game cards<?= $scScope === 'division' ? ' — your division' : '' ?></a></p>
+    <?php endif; ?>
+    <?php if ($canManageUsers): ?>
+        <p class="mt-14"><a class="btn secondary" href="users.php">Manage users</a></p>
     <?php endif; ?>
 </div>
 <?php
