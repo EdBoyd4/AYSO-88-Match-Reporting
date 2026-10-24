@@ -30,6 +30,7 @@ include_once GSS88_CONFIG_FILES . '/constants-model-GSS-88-match-and-sanction-db
 include_once GSS88_MODELS_REPORTS . '/model-match-data-insert.php'; // handles inserts for report (PDO)
 include_once GSS88_MODELS_REPORTS . '/model-match-data-query.php'; // all match-data reads (+ the notification email's own query)
 include_once GSS88_VIEWS_REPORTS_COMPOUND . '/class-view-match-report-form.php';
+include_once GSS88_VIEWS_REPORTS_FOCUSED . '/class-view-match-report-error-page.php';
 include_once GSS88_CONTROLLERS_UPLOAD . '/controller-match-report-sanitize-and-enter.php';
 
 // $dbhost/$dbname/$dbuser/$dbpass come from constants-model-GSS-88-match-and-
@@ -142,7 +143,22 @@ function maybeCreateInlineRappReport(int $scheduledMatchId, string $ip): void
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
     error_log("POST received: Session ID: " . $sessionId. " date: ".$currentDateFromSys." time: ".$currentTimeFromSys);
 
-    $headerDataItems = getHeaderDataFromPOST();
+    try {
+        $headerDataItems = getHeaderDataFromPOST();
+    } catch (GameCardPhotoException $e) {
+        // A photo was rejected; any photo saved before it (photo 1 when
+        // photo 2 is bad) must not stay behind.
+        error_log('Game card photo rejected: Session ID: ' . $sessionId . ' - ' . $e->getMessage());
+        removeSavedGameCardPhotos();
+        http_response_code(422);
+        (new MatchReportErrorPage(
+            'Your match report was not saved',
+            $e->getMessage(),
+            $_SERVER['PHP_SELF'],
+            $currentDateFromSys . ' ' . $currentTimeFromSys
+        ))->render();
+        exit;
+    }
 
     error_log("Header Processed: Session ID: " . $sessionId. " date: ".$currentDateFromSys." time: ".$currentTimeFromSys);
 
@@ -151,11 +167,27 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     // user, so just stop here instead of inserting incomplete data.
     if ($headerDataItems === null) {
         error_log("Validation failed: Session ID: " . $sessionId. " date: ".$currentDateFromSys." time: ".$currentTimeFromSys);
+        removeSavedGameCardPhotos();
         die();
     }
 
-    // method below returns matchIdPlayed
-    $matchReportId = $matchDataInserter->insertMatchData($headerDataItems);
+    // method below returns matchIdPlayed. If it fails, the photos were
+    // already written to disk by getHeaderDataFromPOST() -- delete them so a
+    // failed submission leaves no orphaned files, and tell the user.
+    try {
+        $matchReportId = $matchDataInserter->insertMatchData($headerDataItems);
+    } catch (\Throwable $e) {
+        error_log('Match report insert failed: Session ID: ' . $sessionId . ' - ' . $e->getMessage());
+        removeSavedGameCardPhotos();
+        http_response_code(500);
+        (new MatchReportErrorPage(
+            'Your match report was not saved',
+            'Something went wrong on our server while saving your report, so nothing was recorded and your photos were not kept. Please go back and submit it again. You may need to re-select your game card photos.',
+            $_SERVER['PHP_SELF'],
+            $currentDateFromSys . ' ' . $currentTimeFromSys
+        ))->render();
+        exit;
+    }
 
     error_log("data uploaded: Session ID: " . $sessionId. " date: ".$currentDateFromSys." time: ".$currentTimeFromSys);
 

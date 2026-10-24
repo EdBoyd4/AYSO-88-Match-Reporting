@@ -1,5 +1,26 @@
 <?php
 
+require_once __DIR__ . '/exception-game-card-photo.php';
+require_once __DIR__ . '/class-game-card-heic-converter.php';
+
+// Full paths of photos written to disk during this request, so a failure
+// later in the submission (another photo rejected, DB insert failed) can
+// delete them instead of leaving orphans.
+function &gameCardSavedPhotoPathRegistry(){
+    static $paths = [];
+    return $paths;
+}
+
+function removeSavedGameCardPhotos(){
+    $paths = &gameCardSavedPhotoPathRegistry();
+    foreach ($paths as $path) {
+        if (is_file($path) && !unlink($path)) {
+            error_log('Could not remove orphaned game card photo: ' . $path);
+        }
+    }
+    $paths = [];
+}
+
 // validate the file extention and MIME type
 // the code below supports >= 90-95% of file types
 function gameCardImageMIMEAndExtensionCheck($gameCardsPhotoNameExpected, $allowedMimeTypes, $allowedExtensions){
@@ -9,13 +30,13 @@ function gameCardImageMIMEAndExtensionCheck($gameCardsPhotoNameExpected, $allowe
     finfo_close($finfo);
     if (!in_array($mimeType, $allowedMimeTypes)) {
         error_log('Unsupported MIME type: ' . $mimeType);
-        die('Unsupported file type!');  //-------------------------------------------------------------------------------------------------------------------------------------------
+        throw new GameCardPhotoException('That file is not a type we accept. Please use a JPG or PNG photo.');  //-------------------------------------------------------------------------------------------------------------------------------------------
     }else{
         // Step 2: Validate File Extension
         $fileExtension = strtolower(pathinfo($_FILES[$gameCardsPhotoNameExpected]['name'], PATHINFO_EXTENSION));
         if (!in_array($fileExtension, $allowedExtensions)) {
             error_log('Unsupported file extension: ' . $fileExtension);
-            die('Unsupported file extension!');  //-------------------------------------------------------------------------------------------------------------------------------------------
+            throw new GameCardPhotoException('That file name does not end in .jpg, .jpeg or .png. Please use a JPG or PNG photo.');  //-------------------------------------------------------------------------------------------------------------------------------------------
         }else{
             return $fileExtension;
         }
@@ -26,12 +47,12 @@ function gameCardImageIntegrityAndFileSizeCheck($gameCardsPhotoNameExpected){
     // Determines the size, dimensions and MIME type of an image. If the file is not a valid image, it returns false.
     $imageInfo = getimagesize($_FILES[$gameCardsPhotoNameExpected]['tmp_name']);
     if ($imageInfo === false) {
-        die("Uploaded file is not a valid image.");  //-------------------------------------------------------------------------------------------------------------------------------------------
+        throw new GameCardPhotoException("That file could not be read as a photo. Please take or choose the photo again (JPG, PNG or HEIC).");  //-------------------------------------------------------------------------------------------------------------------------------------------
     }
     // Identifies the type of image file. Returns constants like IMAGETYPE_JPEG, IMAGETYPE_PNG, etc., or false if the file is not an image.
     $imageType = exif_imagetype($_FILES[$gameCardsPhotoNameExpected]['tmp_name']);
     if ($imageType === false) {
-        die("Uploaded file is not a valid image.");  //-------------------------------------------------------------------------------------------------------------------------------------------
+        throw new GameCardPhotoException("That file could not be read as a photo. Please take or choose the photo again (JPG, PNG or HEIC).");  //-------------------------------------------------------------------------------------------------------------------------------------------
     }
     /* Comparing the results of the array value created by getimagesize against the array value created by exif_imagetype was considered.
     However, the computational overhead, work involved, and cutomer deadline lead to the decision against implementing this strategy for the initial release. */
@@ -41,9 +62,9 @@ function gameCardImageIntegrityAndFileSizeCheck($gameCardsPhotoNameExpected){
     if ($imageJpg !== false || $imagePng !== false) {
         return true;
     }elseif ($imageJpg === false) {
-        die("Uploaded file is not a valid JPEG / JPG image.");  //-------------------------------------------------------------------------------------------------------------------------------------------
+        throw new GameCardPhotoException("That JPG photo could not be read; it may be damaged. Please take or choose the photo again.");  //-------------------------------------------------------------------------------------------------------------------------------------------
     }elseif ($imagePng === false) {
-        die("Uploaded file is not a valid PNG image.");  //-------------------------------------------------------------------------------------------------------------------------------------------
+        throw new GameCardPhotoException("That PNG photo could not be read; it may be damaged. Please take or choose the photo again.");  //-------------------------------------------------------------------------------------------------------------------------------------------
     }
     // need third party library for heic / heif files
 
@@ -121,7 +142,14 @@ function gameCardFileSave($gameCardsPhotoNameExpected, $gameCardsSystemLocation,
 
     // Ensure the destination path ends with a directory separator
     $destinationPath = rtrim($gameCardsSystemLocation, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $gameCardPhotoSystemName;
-    move_uploaded_file($_FILES[$gameCardsPhotoNameExpected]["tmp_name"], $destinationPath);
+    $tmpPath = $_FILES[$gameCardsPhotoNameExpected]["tmp_name"];
+    // a HEIC photo converted server-side is our own temp file, not a PHP
+    // upload, so move_uploaded_file() would refuse it
+    $moved = is_uploaded_file($tmpPath) ? move_uploaded_file($tmpPath, $destinationPath) : rename($tmpPath, $destinationPath);
+    if (!$moved) {
+        error_log('Failed to move uploaded game card photo to ' . $destinationPath);
+        return false;
+    }
 
     // Check if the file was uploaded successfully
     /* if (isset($_FILES[$gameCardsPhotoNameExpected])) {
@@ -157,6 +185,7 @@ function gameCardFileSave($gameCardsPhotoNameExpected, $gameCardsSystemLocation,
     } else {
         die("No file was uploaded.");
     } */
+    return $destinationPath;
 }
 
 
@@ -168,6 +197,11 @@ function processGameCardPhotoUpload(&$headerDataItems, $gameCardsPhotoNameExpect
     // $_FILES was already checked for presence of a file with the expected name
     $fileExtension = gameCardImageMIMEAndExtensionCheck($gameCardsPhotoNameExpected, $allowedMimeTypes, $allowedExtensions);
     if(in_array($fileExtension, $allowedExtensions)){
+        if (in_array($fileExtension, ['heic', 'heif'], true)) {
+            // swap the upload for a JPEG copy; everything below then treats it as a normal JPEG
+            $_FILES[$gameCardsPhotoNameExpected]['tmp_name'] = (new GameCardHeicConverter())->convertToJpeg($_FILES[$gameCardsPhotoNameExpected]['tmp_name']);
+            $fileExtension = 'jpg';
+        }
         if(gameCardImageIntegrityAndFileSizeCheck($gameCardsPhotoNameExpected) != false){
             // convert and process heif / heic conversion  --------------------------------------------------------------------------------------------------------------------------
 
@@ -193,7 +227,14 @@ function processGameCardPhotoUpload(&$headerDataItems, $gameCardsPhotoNameExpect
             $gameCardPhotoSystemName = gameCardPhotoReName($imageDate, $imageDivisionName, $imageFieldName, $safeImageTime, $fileExtension, $gameCardsPhotoNumber);
             error_log('FileName: ' . $gameCardPhotoSystemName);
             // save the image in a non-public directory under a safe and searchable name 
-            gameCardFileSave($gameCardsPhotoNameExpected, $gameCardsSystemLocation, $gameCardPhotoSystemName);
+            $savedPath = gameCardFileSave($gameCardsPhotoNameExpected, $gameCardsSystemLocation, $gameCardPhotoSystemName);
+            if ($savedPath === false) {
+                throw new GameCardPhotoException('We could not save your game card photo on the server. Please try again.');
+            }
+            // remembered so match-report.php can delete the file again if
+            // the DB insert that follows fails (no orphaned photos)
+            $registry = &gameCardSavedPhotoPathRegistry();
+            $registry[] = $savedPath;
             // insert photo name into the array used for compiling the form data
             $headerDataItems[$gameCardsPhotoNameExpected] = $gameCardPhotoSystemName;
         }
@@ -226,6 +267,6 @@ function processImageFileFromDATA(&$headerDataItems, $gameCardsPhotoNumber){
         processGameCardPhotoUpload($headerDataItems, $photoNameFromForm, $gameCardsPhotoNumber);
 	}else{
 		error_log('no photo entered for front of '.$gameCardsPhotoNumber.' and back of other');
-		echo 'We did not receive a photo of the front of gamecard '.$gameCardsPhotoNumber.' and the back of gamecard the other.';
+		throw new GameCardPhotoException('We did not receive Photo '.$gameCardsPhotoNumber.'. Please choose it again and resubmit.');
 	}
 }

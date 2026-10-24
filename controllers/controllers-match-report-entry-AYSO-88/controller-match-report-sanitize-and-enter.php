@@ -40,14 +40,8 @@ function getHeaderDataFromPOST(){
 	}
 
 	// Game Card Photos 1 & 2
-	if (!isset($_FILES['gameCardsPhoto1']) || $_FILES['gameCardsPhoto1']['error'] !== UPLOAD_ERR_OK) {
-		$isValid = false;
-	}
 	processImageFileFromDATA($headerDataItems, 1);
 
-	if (!isset($_FILES['gameCardsPhoto2']) || $_FILES['gameCardsPhoto2']['error'] !== UPLOAD_ERR_OK) {
-		$isValid = false;
-	}
 	processImageFileFromDATA($headerDataItems, 2);
 
 	if (!processSanctionReportBasic($headerDataItems)) {
