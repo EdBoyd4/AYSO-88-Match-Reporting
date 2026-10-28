@@ -329,6 +329,7 @@ textarea:required:valid {
 
 .section-match-entry > button,
 .section_photo-gamecards > button,
+.section_photo-gamecards > label.button-gamecard-take-photo,
 .section_sanction-entry > button,
 .section_match-issue > button {
   display: block;
@@ -356,6 +357,7 @@ textarea:required:valid {
 
 .section-match-entry > button:hover,
 .section_photo-gamecards > button:hover,
+.section_photo-gamecards > label.button-gamecard-take-photo:hover,
 .section_sanction-entry > button:hover,
 .section_match-issue > button:hover {
   background: var(--primary);
@@ -364,9 +366,28 @@ textarea:required:valid {
 
 .section-match-entry > button:active,
 .section_photo-gamecards > button:active,
+.section_photo-gamecards > label.button-gamecard-take-photo:active,
 .section_sanction-entry > button:active,
 .section_match-issue > button:active {
   transform: translateY(1px);
+}
+
+/* "Take Photo" is a <label> for a camera file input (not a <button> that
+   calls input.click()) because Android Chrome ignores a scripted click on a
+   hidden file input; a label activates the input natively. The input is
+   visually hidden rather than display:none/hidden for the same reason. */
+.section_photo-gamecards > label.button-gamecard-take-photo {
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.photo_gamecard-camera {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 /* Center labels in the referee-details fieldset */
