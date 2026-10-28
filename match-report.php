@@ -143,17 +143,43 @@ function maybeCreateInlineRappReport(int $scheduledMatchId, string $ip): void
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
     error_log("POST received: Session ID: " . $sessionId. " date: ".$currentDateFromSys." time: ".$currentTimeFromSys);
 
+    // Device/size details for diagnosing submissions that never complete
+    // (e.g. a phone upload that stalls): the log had nothing to tell a
+    // failed iPhone submission apart from anyone else's.
+    $photoErrorCodes = [];
+    foreach (['gameCardsPhoto1', 'gameCardsPhoto2'] as $photoKey) {
+        $photoErrorCodes[] = $photoKey . '=' . (isset($_FILES[$photoKey]) ? $_FILES[$photoKey]['error'] . '/' . $_FILES[$photoKey]['size'] . 'B/' . $_FILES[$photoKey]['type'] : 'missing');
+    }
+    error_log('POST details: Session ID: ' . $sessionId . ' content-length=' . ($_SERVER['CONTENT_LENGTH'] ?? '?') . ' post_max=' . ini_get('post_max_size') . ' upload_max=' . ini_get('upload_max_filesize') . ' ' . implode(' ', $photoErrorCodes) . ' ua=' . ($_SERVER['HTTP_USER_AGENT'] ?? '?'));
+
+    // Section validators echo their own specific complaint; capture it so
+    // it can go inside the error page instead of ahead of it.
+    ob_start();
     try {
         $headerDataItems = getHeaderDataFromPOST();
+        $validationNotes = trim(strip_tags((string) ob_get_clean()));
     } catch (GameCardPhotoException $e) {
         // A photo was rejected; any photo saved before it (photo 1 when
         // photo 2 is bad) must not stay behind.
+        ob_end_clean();
         error_log('Game card photo rejected: Session ID: ' . $sessionId . ' - ' . $e->getMessage());
         removeSavedGameCardPhotos();
         http_response_code(422);
         (new MatchReportErrorPage(
             'Your match report was not saved',
             $e->getMessage(),
+            $_SERVER['PHP_SELF'],
+            $currentDateFromSys . ' ' . $currentTimeFromSys
+        ))->render();
+        exit;
+    } catch (\Throwable $e) {
+        ob_end_clean();
+        error_log('Match report validation crashed: Session ID: ' . $sessionId . ' - ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+        removeSavedGameCardPhotos();
+        http_response_code(500);
+        (new MatchReportErrorPage(
+            'Your match report was not saved',
+            'Something went wrong on our server while checking your report, so nothing was recorded. Please go back and submit it again.',
             $_SERVER['PHP_SELF'],
             $currentDateFromSys . ' ' . $currentTimeFromSys
         ))->render();
@@ -168,7 +194,14 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     if ($headerDataItems === null) {
         error_log("Validation failed: Session ID: " . $sessionId. " date: ".$currentDateFromSys." time: ".$currentTimeFromSys);
         removeSavedGameCardPhotos();
-        die();
+        http_response_code(422);
+        (new MatchReportErrorPage(
+            'Your match report was not saved',
+            'Some required information was missing or not valid. ' . ($validationNotes !== '' ? $validationNotes . ' ' : '') . 'Please go back, check every field, and submit again. You may need to re-select your game card photos.',
+            $_SERVER['PHP_SELF'],
+            $currentDateFromSys . ' ' . $currentTimeFromSys
+        ))->render();
+        exit;
     }
 
     // method below returns matchIdPlayed. If it fails, the photos were
