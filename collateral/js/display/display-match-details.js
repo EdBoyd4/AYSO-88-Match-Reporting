@@ -297,6 +297,27 @@ function registerMatchIssueButtons(buttonsMatchIssues){
     });
 }
 
+// "Take Photo" opens a hidden capture="environment" input (straight to the
+// camera); whatever it returns is handed to the real, named photo input in
+// the same fieldset and a 'change' is fired there, so the existing preview,
+// resize and form-validity handling all run exactly as for an upload.
+function registerGameCardsCameraButtons(form){
+    form.querySelectorAll('.button-gamecard-take-photo').forEach(function(button) {
+        const cameraInput = document.getElementById(button.dataset.cameraInput);
+        const photoInput = button.closest('fieldset').querySelector('.photo_gamecard-pair');
+        if (!cameraInput || !photoInput) return;
+        button.addEventListener('click', function() {
+            cameraInput.click();
+        });
+        cameraInput.addEventListener('change', function() {
+            if (!cameraInput.files || cameraInput.files.length === 0) return;
+            photoInput.files = cameraInput.files;
+            cameraInput.value = '';
+            photoInput.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    });
+}
+
 function registerGameCardsPhotoInputs(gameCardPhotos){
     gameCardPhotos.forEach(function(input) {
         input.addEventListener('change', function() {

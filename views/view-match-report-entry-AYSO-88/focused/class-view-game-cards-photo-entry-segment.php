@@ -49,6 +49,17 @@ class GameCardsPhotoEntrySegment {
         // <legend> isn't itself a label for the control inside it.
         echo '<fieldset id="section_' . $matchPrefix . 'gamecard-pair-' . $this->pairNumber . '-photo-entry" class="section_photo-gamecards">
             <legend id="' . $legendId . '" class="label_gamecards_photo">' . $pairNumberText . '</legend>
+            <!-- Two ways in: this button opens the camera directly (the capture
+                 attribute only works on a file input of its own); the visible
+                 input below stays as the upload path. display-match-details.js
+                 hands the new photo to the named input. -->
+            <button type="button" class="button-gamecard-take-photo"
+                data-camera-input="camera_' . $matchPrefix . 'gamecard-pair-' . $this->pairNumber . '">
+                Take Photo
+            </button>
+            <input type="file" accept="image/*" capture="environment" hidden tabindex="-1"
+                id="camera_' . $matchPrefix . 'gamecard-pair-' . $this->pairNumber . '"
+                class="photo_gamecard-camera" aria-hidden="true">
             <input type="file" accept="image/*"
                 name="game' . $matchNamePrefix . 'CardsPhoto' . $this->pairNumber . '"
                 id="photo_' . $matchPrefix . 'gamecard-pair-' . $this->pairNumber . '"
