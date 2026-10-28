@@ -15,3 +15,8 @@ public/RAPPReports/
 # Prevent stray nested git pointers
 public/.git
 vendor/
+
+# Not production: notes/plans and scratch files
+*.md
+temp_page.html
+controllers/controllers-match-issue-reports-AYSO-88/cronTest.php
