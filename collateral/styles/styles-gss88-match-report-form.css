@@ -440,6 +440,13 @@ textarea:required:valid {
   color: #2b2f33; /* matches your ink variable */
 }
 
+/* controller-match-report-form.js reveals this by removing [hidden]; the
+   #loadingMessage rule above (display:none, ID specificity) used to keep it
+   invisible even then, so a slow upload showed only the page background. */
+#loadingMessage:not([hidden]) {
+  display: flex;
+}
+
 /* The Modal (background) */
 .modal {
   display: none;
